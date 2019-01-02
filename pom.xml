@@ -20,6 +20,8 @@
 		<spring-data-jpa.version>2.1.3.RELEASE</spring-data-jpa.version>
 		<!-- Servlet API -->
 		<servlet.version>3.1.0</servlet.version>
+		
+		<commons-lang3.version>3.8.1</commons-lang3.version>
 	</properties>
 	
 	<build>
@@ -87,11 +89,12 @@
 		    <version>2.1.1.RELEASE</version>
 		</dependency>
 		
-		<!-- usado por ResourcesExceptionHandler -->
+		<!-- usado por ResourcesExceptionHandler (ExceptionUtils) -->
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-lang3</artifactId>
-			<version>3.4</version>
+			<version>${commons-lang3.version}</version>
+			<scope>compile</scope>
 		</dependency>
 	</dependencies>
 </project>

@@ -72,7 +72,6 @@ public abstract class ResourcesExceptionHandler extends ResponseEntityExceptionH
 		return erros;
 	}
 
-	@ExceptionHandler({ HttpMessageNotReadableException.class })
 	@Override
 	protected ResponseEntity<Object> handleHttpMessageNotReadable(HttpMessageNotReadableException ex,
 			HttpHeaders headers, HttpStatus status, WebRequest request) {
