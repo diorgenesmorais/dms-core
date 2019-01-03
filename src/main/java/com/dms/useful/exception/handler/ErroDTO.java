@@ -3,7 +3,7 @@ package com.dms.useful.exception.handler;
 /**
  * 
  * @author Diorgenes Morais
- * @since 1.1.6
+ * @since 1.0.1
  */
 public class ErroDTO {
 

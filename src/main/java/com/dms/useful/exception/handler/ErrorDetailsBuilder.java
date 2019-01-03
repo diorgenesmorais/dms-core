@@ -6,7 +6,7 @@ package com.dms.useful.exception.handler;
  * 
  * @author Diorgenes Morais
  * @version 1.0.0
- * @since 1.1.6
+ * @since 1.0.1
  */
 public class ErrorDetailsBuilder {
 
