@@ -3,6 +3,7 @@ package com.dms.useful.event;
 import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.context.ApplicationEvent;
+import org.springframework.lang.NonNull;
 
 public class ResourceCreatedEvent<ID> extends ApplicationEvent {
 
@@ -20,7 +21,7 @@ public class ResourceCreatedEvent<ID> extends ApplicationEvent {
 	 * @param id
 	 *            of model (resource)
 	 */
-	public ResourceCreatedEvent(Object source, HttpServletResponse response, ID id) {
+	public ResourceCreatedEvent(Object source, HttpServletResponse response, @NonNull ID id) {
 		super(source);
 		this.response = response;
 		this.id = id;
