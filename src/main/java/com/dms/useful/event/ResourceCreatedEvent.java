@@ -4,6 +4,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.context.ApplicationEvent;
 import org.springframework.lang.NonNull;
+import org.springframework.util.Assert;
 
 public class ResourceCreatedEvent<ID> extends ApplicationEvent {
 
@@ -23,6 +24,7 @@ public class ResourceCreatedEvent<ID> extends ApplicationEvent {
 	 */
 	public ResourceCreatedEvent(Object source, HttpServletResponse response, @NonNull ID id) {
 		super(source);
+		Assert.notNull(id, String.format("Id should not be null, error in %s", this.getClass().getName()));
 		this.response = response;
 		this.id = id;
 	}
