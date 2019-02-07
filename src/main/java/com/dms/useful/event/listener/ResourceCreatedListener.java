@@ -37,7 +37,7 @@ public abstract class ResourceCreatedListener<ID> implements ApplicationListener
 	}
 
 	private void addHeaderLocation(HttpServletResponse response, ID id) {
-		URI uri = ServletUriComponentsBuilder.fromCurrentRequestUri().path("/{id}").buildAndExpand(id).toUri();
+		URI uri = ServletUriComponentsBuilder.fromCurrentRequestUri().path("/{id}").build(id);
 		response.setHeader("Location", uri.toASCIIString());
 	}
 }
