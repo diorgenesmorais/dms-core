@@ -5,7 +5,7 @@
 	
 	<groupId>com.dms.useful</groupId>
 	<artifactId>dms-core</artifactId>
-	<version>1.0.4-RELEASE</version>
+	<version>1.0.5-RELEASE</version>
 	<name>dms-core</name>
 	<description>Biblioteca de códigos útil</description>
 	
@@ -13,7 +13,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		
-		<java.version>1.8</java.version>
+		<java.version>11</java.version>
 		<maven-compiler-pluging.version>3.2</maven-compiler-pluging.version>
 		
 		<!-- Spring Data JPA -->
