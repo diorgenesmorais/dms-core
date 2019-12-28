@@ -5,7 +5,7 @@
 	
 	<groupId>com.dms.useful</groupId>
 	<artifactId>dms-core</artifactId>
-	<version>1.0.5-RELEASE</version>
+	<version>1.0.6-RELEASE</version>
 	<name>dms-core</name>
 	<description>Biblioteca de códigos útil</description>
 	
