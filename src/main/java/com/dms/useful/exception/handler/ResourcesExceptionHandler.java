@@ -130,19 +130,18 @@ public abstract class ResourcesExceptionHandler extends ResponseEntityExceptionH
 
 		return handleExceptionInternal(ex, erros, new HttpHeaders(), HttpStatus.NOT_ACCEPTABLE, request);
 	}
-	
-	// TODO refatorar
+
 	@Override
 	protected ResponseEntity<Object> handleHttpMediaTypeNotAcceptable(HttpMediaTypeNotAcceptableException ex,
 			HttpHeaders headers, HttpStatus status, WebRequest request) {
 
 		StringBuilder builder = new StringBuilder();
-		builder.append("media type is not supported. Mídia não aceitas");
+		builder.append("Media type is not supported. ");
 		ex.getSupportedMediaTypes().forEach(t -> builder.append(t + ", "));
-		String messageUser = builder.substring(0, builder.length() - 2);
+		String messageUser = builder.substring(0, builder.length() - 1);
 		String messageDeveloper = ex.getCause() != null ? ex.getCause().toString() : ex.toString();
 		ErrorDetails erros = ErrorDetailsBuilder.newBuilder()
-				.title("Unsupported Media Type").status(status.value()).timestamp(new Date().getTime())
+				.title("Not acceptable Media Type").status(status.value()).timestamp(new Date().getTime())
 				.userMessage(messageUser).developerMessage(messageDeveloper).build();
 
 		return handleExceptionInternal(ex, erros, headers, HttpStatus.NOT_ACCEPTABLE, request);
