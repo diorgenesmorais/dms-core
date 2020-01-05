@@ -143,9 +143,9 @@ public abstract class ResourcesExceptionHandler extends ResponseEntityExceptionH
 		ex.getSupportedMediaTypes().forEach(t -> builder.append(t + ", "));
 		String messageUser = builder.substring(0, builder.length() - 1);
 		String messageDeveloper = ex.getCause() != null ? ex.getCause().toString() : ex.toString();
-		ErrorDetails erros = ErrorDetailsBuilder.newBuilder()
+		List<ErrorDetails> erros = Arrays.asList(ErrorDetailsBuilder.newBuilder()
 				.title("Not acceptable Media Type").status(status.value()).timestamp(new Date().getTime())
-				.userMessage(messageUser).developerMessage(messageDeveloper).build();
+				.userMessage(messageUser).developerMessage(messageDeveloper).build());
 
 		return handleExceptionInternal(ex, erros, headers, HttpStatus.NOT_ACCEPTABLE, request);
 	}
@@ -165,9 +165,9 @@ public abstract class ResourcesExceptionHandler extends ResponseEntityExceptionH
 		ex.getSupportedMediaTypes().forEach(t -> builder.append(t + ", "));
 		String messageUser = builder.substring(0, builder.length() - 1);
 		String messageDeveloper = ex.getCause() != null ? ex.getCause().toString() : ex.toString();
-		ErrorDetails erros = ErrorDetailsBuilder.newBuilder()
+		List<ErrorDetails> erros = Arrays.asList(ErrorDetailsBuilder.newBuilder()
 				.title("Unsupported Media Type").status(status.value()).timestamp(new Date().getTime())
-				.userMessage(messageUser).developerMessage(messageDeveloper).build();
+				.userMessage(messageUser).developerMessage(messageDeveloper).build());
 
 		return handleExceptionInternal(ex, erros, headers, HttpStatus.UNSUPPORTED_MEDIA_TYPE, request);
 	}
