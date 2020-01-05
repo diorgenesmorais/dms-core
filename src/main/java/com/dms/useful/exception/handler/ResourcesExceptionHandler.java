@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 import javax.validation.ConstraintViolationException;
 
@@ -15,6 +16,7 @@ import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -24,6 +26,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.HttpMediaTypeNotAcceptableException;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
@@ -167,5 +170,28 @@ public abstract class ResourcesExceptionHandler extends ResponseEntityExceptionH
 				.userMessage(messageUser).developerMessage(messageDeveloper).build();
 
 		return handleExceptionInternal(ex, erros, headers, HttpStatus.UNSUPPORTED_MEDIA_TYPE, request);
+	}
+
+	@Override
+	protected ResponseEntity<Object> handleHttpRequestMethodNotSupported(HttpRequestMethodNotSupportedException ex,
+			HttpHeaders headers, HttpStatus status, WebRequest request) {
+
+		Set<HttpMethod> supportedMethods = ex.getSupportedHttpMethods();
+		if (!CollectionUtils.isEmpty(supportedMethods)) {
+			headers.setAllow(supportedMethods);
+		}
+		
+		StringBuilder builder = new StringBuilder();
+		builder.append("Método não aceito.");
+		builder.append(" Método(s) aceito(s): ");
+		ex.getSupportedHttpMethods().forEach(m -> builder.append(m + ", "));
+
+		String userMessage = builder.toString();
+		List<ErrorDetails> erros = Arrays
+				.asList(ErrorDetailsBuilder.newBuilder().title("Request Method Not Supported")
+						.status(HttpStatus.NOT_ACCEPTABLE.value()).timestamp(new Date().getTime())
+						.userMessage(userMessage).developerMessage(ExceptionUtils.getRootCauseMessage(ex)).build());
+		
+		return handleExceptionInternal(ex, erros, headers, HttpStatus.METHOD_NOT_ALLOWED, request);
 	}
 }

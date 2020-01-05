@@ -1,14 +1,17 @@
 package com.dms.useful.exception.handler;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertSame;
 
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +19,7 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.web.HttpMediaTypeNotAcceptableException;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.context.request.WebRequest;
@@ -94,5 +98,14 @@ public class ResourcesExceptionHandlerTest {
 
 		ResponseEntity<Object> responseEntity = testException(ex);
 		assertEquals(acceptable, responseEntity.getHeaders().getAccept());
+	}
+
+	@Test
+	public void whenHttpRequestMethodNotSupported() throws Exception {
+		List<String> supported = Arrays.asList("POST", "DELETE");
+		Exception ex = new HttpRequestMethodNotSupportedException("GET", supported);
+
+		ResponseEntity<Object> responseEntity = testException(ex);
+		assertEquals(EnumSet.of(HttpMethod.POST, HttpMethod.DELETE), responseEntity.getHeaders().getAllow());
 	}
 }
