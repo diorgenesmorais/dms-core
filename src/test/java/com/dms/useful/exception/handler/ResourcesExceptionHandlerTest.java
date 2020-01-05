@@ -1,17 +1,21 @@
 package com.dms.useful.exception.handler;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertSame;
+import static org.junit.Assert.*;
+
+import java.util.Arrays;
+import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.web.HttpMediaTypeNotAcceptableException;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.context.request.WebRequest;
@@ -81,5 +85,14 @@ public class ResourcesExceptionHandlerTest {
 	public void whenHttpMediaTypeNotAcceptableException() throws Exception {
 		Exception ex = new HttpMediaTypeNotAcceptableException("");
 		testException(ex);
+	}
+
+	@Test
+	public void whenHttpMediaTypeNotSupported() throws Exception {
+		List<MediaType> acceptable = Arrays.asList(MediaType.APPLICATION_ATOM_XML, MediaType.APPLICATION_XML);
+		Exception ex = new HttpMediaTypeNotSupportedException(MediaType.APPLICATION_JSON, acceptable);
+
+		ResponseEntity<Object> responseEntity = testException(ex);
+		assertEquals(acceptable, responseEntity.getHeaders().getAccept());
 	}
 }

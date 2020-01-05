@@ -16,8 +16,10 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.util.CollectionUtils;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.HttpMediaTypeNotAcceptableException;
@@ -146,16 +148,20 @@ public abstract class ResourcesExceptionHandler extends ResponseEntityExceptionH
 		return handleExceptionInternal(ex, erros, headers, HttpStatus.NOT_ACCEPTABLE, request);
 	}
 
-	// TODO refatorar
 	@Override
 	protected ResponseEntity<Object> handleHttpMediaTypeNotSupported(HttpMediaTypeNotSupportedException ex,
 			HttpHeaders headers, HttpStatus status, WebRequest request) {
 		
+		List<MediaType> mediaTypes = ex.getSupportedMediaTypes();
+		if (!CollectionUtils.isEmpty(mediaTypes)) {
+			headers.setAccept(mediaTypes);
+		}
+
 		StringBuilder builder = new StringBuilder();
 		builder.append(ex.getContentType());
-		builder.append("media type is not supported. Tipos de mídia suportados são");
+		builder.append(" media type is not supported. Tipos de mídia suportados são: ");
 		ex.getSupportedMediaTypes().forEach(t -> builder.append(t + ", "));
-		String messageUser = builder.substring(0, builder.length() - 2);
+		String messageUser = builder.substring(0, builder.length() - 1);
 		String messageDeveloper = ex.getCause() != null ? ex.getCause().toString() : ex.toString();
 		ErrorDetails erros = ErrorDetailsBuilder.newBuilder()
 				.title("Unsupported Media Type").status(status.value()).timestamp(new Date().getTime())
