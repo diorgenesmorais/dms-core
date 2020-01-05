@@ -181,8 +181,9 @@ public abstract class ResourcesExceptionHandler extends ResponseEntityExceptionH
 		}
 		
 		StringBuilder builder = new StringBuilder();
-		builder.append("Método não aceito.");
-		builder.append(" Método(s) aceito(s): ");
+		builder.append("Método ");
+		builder.append(ex.getMethod());
+		builder.append(" não aceito. Método(s) aceito(s): ");
 		ex.getSupportedHttpMethods().forEach(m -> builder.append(m + ", "));
 
 		String userMessage = builder.toString();
