@@ -95,7 +95,6 @@ public abstract class ResourcesExceptionHandler extends ResponseEntityExceptionH
 	@Override
 	protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex,
 			HttpHeaders headers, HttpStatus status, WebRequest request) {
-		status = HttpStatus.NOT_ACCEPTABLE;
 		List<ErrorDetails> erros = criarListaErros(ex.getBindingResult(), status);
 		return handleExceptionInternal(ex, erros, headers, status, request);
 	}
@@ -147,7 +146,7 @@ public abstract class ResourcesExceptionHandler extends ResponseEntityExceptionH
 				.title("Not acceptable Media Type").status(status.value()).timestamp(new Date().getTime())
 				.userMessage(messageUser).developerMessage(messageDeveloper).build());
 
-		return handleExceptionInternal(ex, erros, headers, HttpStatus.NOT_ACCEPTABLE, request);
+		return handleExceptionInternal(ex, erros, headers, status, request);
 	}
 
 	@Override
@@ -169,7 +168,7 @@ public abstract class ResourcesExceptionHandler extends ResponseEntityExceptionH
 				.title("Unsupported Media Type").status(status.value()).timestamp(new Date().getTime())
 				.userMessage(messageUser).developerMessage(messageDeveloper).build());
 
-		return handleExceptionInternal(ex, erros, headers, HttpStatus.UNSUPPORTED_MEDIA_TYPE, request);
+		return handleExceptionInternal(ex, erros, headers, status, request);
 	}
 
 	@Override
@@ -189,9 +188,9 @@ public abstract class ResourcesExceptionHandler extends ResponseEntityExceptionH
 		String userMessage = builder.toString();
 		List<ErrorDetails> erros = Arrays
 				.asList(ErrorDetailsBuilder.newBuilder().title("Request Method Not Supported")
-						.status(HttpStatus.NOT_ACCEPTABLE.value()).timestamp(new Date().getTime())
+						.status(status.value()).timestamp(new Date().getTime())
 						.userMessage(userMessage).developerMessage(ExceptionUtils.getRootCauseMessage(ex)).build());
 		
-		return handleExceptionInternal(ex, erros, headers, HttpStatus.METHOD_NOT_ALLOWED, request);
+		return handleExceptionInternal(ex, erros, headers, status, request);
 	}
 }

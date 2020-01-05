@@ -88,7 +88,8 @@ public class ResourcesExceptionHandlerTest {
 	@Test
 	public void whenHttpMediaTypeNotAcceptableException() throws Exception {
 		Exception ex = new HttpMediaTypeNotAcceptableException("");
-		testException(ex);
+		ResponseEntity<Object> responseEntity = testException(ex);
+		assertEquals(HttpStatus.NOT_ACCEPTABLE, responseEntity.getStatusCode());
 	}
 
 	@Test
@@ -98,6 +99,7 @@ public class ResourcesExceptionHandlerTest {
 
 		ResponseEntity<Object> responseEntity = testException(ex);
 		assertEquals(acceptable, responseEntity.getHeaders().getAccept());
+		assertEquals(HttpStatus.UNSUPPORTED_MEDIA_TYPE, responseEntity.getStatusCode());
 	}
 
 	@Test
@@ -107,5 +109,6 @@ public class ResourcesExceptionHandlerTest {
 
 		ResponseEntity<Object> responseEntity = testException(ex);
 		assertEquals(EnumSet.of(HttpMethod.POST, HttpMethod.DELETE), responseEntity.getHeaders().getAllow());
+		assertEquals(HttpStatus.METHOD_NOT_ALLOWED, responseEntity.getStatusCode());
 	}
 }
