@@ -6,8 +6,14 @@ import static org.junit.Assert.assertSame;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.validation.ConstraintViolation;
+import javax.validation.ConstraintViolationException;
+import javax.validation.Validation;
+import javax.validation.Validator;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -20,10 +26,8 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.web.HttpMediaTypeNotAcceptableException;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
-import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.context.request.WebRequest;
-import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 import org.springframework.web.servlet.mvc.support.DefaultHandlerExceptionResolver;
 
 import com.google.gson.Gson;
@@ -36,7 +40,7 @@ import com.google.gson.Gson;
  */
 public class ResourcesExceptionHandlerTest {
 
-	private ResponseEntityExceptionHandler exceptionHandlerSupport;
+	private ResourcesExceptionHandler exceptionHandlerSupport;
 
 	private DefaultHandlerExceptionResolver defaultExceptionResolver;
 
@@ -59,30 +63,22 @@ public class ResourcesExceptionHandlerTest {
 		this.defaultExceptionResolver = new DefaultHandlerExceptionResolver();
 	}
 
-	@RestControllerAdvice
-	private static class ApplicationExceptionHandler extends ResourcesExceptionHandler {
-
-	}
-
 	private ResponseEntity<Object> testException(Exception ex) throws Exception {
-		try {
-			ResponseEntity<Object> responseEntity = this.exceptionHandlerSupport.handleException(ex, this.request);
+		ResponseEntity<Object> responseEntity = this.exceptionHandlerSupport.handlerResourcesException(ex,
+				this.request);
 
-			// SPR-9653
-			if (HttpStatus.INTERNAL_SERVER_ERROR.equals(responseEntity.getStatusCode())) {
-				assertSame(ex, this.servletRequest.getAttribute("javax.servlet.error.exception"));
-			}
-
-			this.defaultExceptionResolver.resolveException(this.servletRequest, this.servletResponse, null, ex);
-
-			assertEquals(this.servletResponse.getStatus(), responseEntity.getStatusCodeValue());
-
-			System.out.println("Body: " + gson.toJson(responseEntity.getBody()));
-
-			return responseEntity;
-		} catch (Exception ex2) {
-			throw new IllegalStateException("handleException threw exception", ex2);
+		// SPR-9653
+		if (HttpStatus.INTERNAL_SERVER_ERROR.equals(responseEntity.getStatusCode())) {
+			assertSame(ex, this.servletRequest.getAttribute("javax.servlet.error.exception"));
 		}
+
+		this.defaultExceptionResolver.resolveException(this.servletRequest, this.servletResponse, null, ex);
+
+		assertEquals(this.servletResponse.getStatus(), responseEntity.getStatusCodeValue());
+
+		System.out.println("Body: " + gson.toJson(responseEntity.getBody()));
+
+		return responseEntity;
 	}
 
 	@Test
@@ -110,5 +106,20 @@ public class ResourcesExceptionHandlerTest {
 		ResponseEntity<Object> responseEntity = testException(ex);
 		assertEquals(EnumSet.of(HttpMethod.POST, HttpMethod.DELETE), responseEntity.getHeaders().getAllow());
 		assertEquals(HttpStatus.METHOD_NOT_ALLOWED, responseEntity.getStatusCode());
+	}
+
+	@Test
+	public void whenConstraintException() throws Exception {
+		// expected response, because the exception is not in DefaultHandlerExceptionResolver
+		this.servletResponse.sendError(HttpServletResponse.SC_NOT_ACCEPTABLE);
+
+		Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
+
+		Set<ConstraintViolation<Model>> violations = validator.validate(new Model());
+
+		Exception ex = new ConstraintViolationException(violations);
+		
+		ResponseEntity<Object> responseEntity = testException(ex);
+		assertEquals(HttpStatus.NOT_ACCEPTABLE, responseEntity.getStatusCode());
 	}
 }

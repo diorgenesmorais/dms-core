@@ -140,7 +140,19 @@
 			<version>1.7.30</version>
 			<scope>test</scope>
 		</dependency>
-
+		<!-- Bean validation - JSR 380 -->
+		<dependency>
+			<groupId>org.hibernate</groupId>
+			<artifactId>hibernate-validator</artifactId>
+			<version>6.0.18.Final</version>
+		</dependency>
+		<!-- Unifield Expression Language - JSR 341 -->
+		<!-- see: https://docs.jboss.org/hibernate/validator/6.0/reference/en-US/html_single/#validator-gettingstarted-uel -->
+		<dependency>
+			<groupId>org.glassfish</groupId>
+			<artifactId>javax.el</artifactId>
+			<version>3.0.1-b11</version>
+		</dependency>
 
 	</dependencies>
 </project>

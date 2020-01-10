@@ -54,6 +54,17 @@ public abstract class ResourcesExceptionHandler extends ResponseEntityExceptionH
 	@Autowired
 	private MessageSource messageSource;
 
+	@ExceptionHandler({ ConstraintViolationException.class })
+	public final ResponseEntity<Object> handlerResourcesException(Exception ex, WebRequest request) throws Exception {
+		HttpHeaders headers = new HttpHeaders();
+
+		if (ex instanceof ConstraintViolationException) {
+			HttpStatus status = HttpStatus.NOT_ACCEPTABLE;
+			return handleConstraintViolationException(ex, headers, status, request);
+		}
+		return super.handleException(ex, request);
+	}
+
 	/*
 	 * Avoid NoSuchMessageException
 	 */
@@ -122,15 +133,14 @@ public abstract class ResourcesExceptionHandler extends ResponseEntityExceptionH
 		return handleExceptionInternal(ex, erros, new HttpHeaders(), HttpStatus.NOT_ACCEPTABLE, request);
 	}
 
-	@ExceptionHandler({ ConstraintViolationException.class })
-	public ResponseEntity<Object> handleConstraintViolationException(ConstraintViolationException ex, WebRequest request){
-		String userMessage = getMessageProperties("resource.not-acceptable");
-		List<ErrorDetails> erros = Arrays
-				.asList(ErrorDetailsBuilder.newBuilder().title("Must not be null")
-						.status(HttpStatus.NOT_ACCEPTABLE.value()).timestamp(new Date().getTime())
-						.userMessage(userMessage).developerMessage(ExceptionUtils.getRootCauseMessage(ex)).build());
+	public ResponseEntity<Object> handleConstraintViolationException(Exception ex, HttpHeaders headers,
+			HttpStatus status, WebRequest request) {
+		String userMessage = "Recurso não aceitos";// getMessageProperties("resource.not-acceptable");
+		List<ErrorDetails> erros = Arrays.asList(ErrorDetailsBuilder.newBuilder().title("Must not be null")
+				.status(status.value()).timestamp(new Date().getTime()).userMessage(userMessage)
+				.developerMessage(ExceptionUtils.getRootCauseMessage(ex)).build());
 
-		return handleExceptionInternal(ex, erros, new HttpHeaders(), HttpStatus.NOT_ACCEPTABLE, request);
+		return handleExceptionInternal(ex, erros, new HttpHeaders(), status, request);
 	}
 
 	@Override
@@ -142,9 +152,9 @@ public abstract class ResourcesExceptionHandler extends ResponseEntityExceptionH
 		ex.getSupportedMediaTypes().forEach(t -> builder.append(t + ", "));
 		String messageUser = builder.substring(0, builder.length() - 1);
 		String messageDeveloper = ex.getCause() != null ? ex.getCause().toString() : ex.toString();
-		List<ErrorDetails> erros = Arrays.asList(ErrorDetailsBuilder.newBuilder()
-				.title("Not acceptable Media Type").status(status.value()).timestamp(new Date().getTime())
-				.userMessage(messageUser).developerMessage(messageDeveloper).build());
+		List<ErrorDetails> erros = Arrays.asList(ErrorDetailsBuilder.newBuilder().title("Not acceptable Media Type")
+				.status(status.value()).timestamp(new Date().getTime()).userMessage(messageUser)
+				.developerMessage(messageDeveloper).build());
 
 		return handleExceptionInternal(ex, erros, headers, status, request);
 	}
@@ -152,7 +162,7 @@ public abstract class ResourcesExceptionHandler extends ResponseEntityExceptionH
 	@Override
 	protected ResponseEntity<Object> handleHttpMediaTypeNotSupported(HttpMediaTypeNotSupportedException ex,
 			HttpHeaders headers, HttpStatus status, WebRequest request) {
-		
+
 		List<MediaType> mediaTypes = ex.getSupportedMediaTypes();
 		if (!CollectionUtils.isEmpty(mediaTypes)) {
 			headers.setAccept(mediaTypes);
@@ -164,9 +174,9 @@ public abstract class ResourcesExceptionHandler extends ResponseEntityExceptionH
 		ex.getSupportedMediaTypes().forEach(t -> builder.append(t + ", "));
 		String messageUser = builder.substring(0, builder.length() - 1);
 		String messageDeveloper = ex.getCause() != null ? ex.getCause().toString() : ex.toString();
-		List<ErrorDetails> erros = Arrays.asList(ErrorDetailsBuilder.newBuilder()
-				.title("Unsupported Media Type").status(status.value()).timestamp(new Date().getTime())
-				.userMessage(messageUser).developerMessage(messageDeveloper).build());
+		List<ErrorDetails> erros = Arrays.asList(ErrorDetailsBuilder.newBuilder().title("Unsupported Media Type")
+				.status(status.value()).timestamp(new Date().getTime()).userMessage(messageUser)
+				.developerMessage(messageDeveloper).build());
 
 		return handleExceptionInternal(ex, erros, headers, status, request);
 	}
@@ -179,7 +189,7 @@ public abstract class ResourcesExceptionHandler extends ResponseEntityExceptionH
 		if (!CollectionUtils.isEmpty(supportedMethods)) {
 			headers.setAllow(supportedMethods);
 		}
-		
+
 		StringBuilder builder = new StringBuilder();
 		builder.append("Método ");
 		builder.append(ex.getMethod());
@@ -187,11 +197,10 @@ public abstract class ResourcesExceptionHandler extends ResponseEntityExceptionH
 		ex.getSupportedHttpMethods().forEach(m -> builder.append(m + ", "));
 
 		String userMessage = builder.toString();
-		List<ErrorDetails> erros = Arrays
-				.asList(ErrorDetailsBuilder.newBuilder().title("Request Method Not Supported")
-						.status(status.value()).timestamp(new Date().getTime())
-						.userMessage(userMessage).developerMessage(ExceptionUtils.getRootCauseMessage(ex)).build());
-		
+		List<ErrorDetails> erros = Arrays.asList(ErrorDetailsBuilder.newBuilder().title("Request Method Not Supported")
+				.status(status.value()).timestamp(new Date().getTime()).userMessage(userMessage)
+				.developerMessage(ExceptionUtils.getRootCauseMessage(ex)).build());
+
 		return handleExceptionInternal(ex, erros, headers, status, request);
 	}
 }
