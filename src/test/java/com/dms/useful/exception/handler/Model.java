@@ -1,5 +1,6 @@
 package com.dms.useful.exception.handler;
 
+import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -12,6 +13,8 @@ public class Model {
 
 	@NotNull
 	private String nome;
+	@NotEmpty
+	private String sobrenome;
 
 	public String getNome() {
 		return nome;
@@ -19,5 +22,13 @@ public class Model {
 
 	public void setNome(String nome) {
 		this.nome = nome;
+	}
+
+	public String getSobrenome() {
+		return sobrenome;
+	}
+
+	public void setSobrenome(String sobrenome) {
+		this.sobrenome = sobrenome;
 	}
 }

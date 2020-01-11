@@ -1,7 +1,6 @@
 package com.dms.useful.exception.handler;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertSame;
+import static org.junit.Assert.*;
 
 import java.util.Arrays;
 import java.util.EnumSet;
@@ -118,7 +117,24 @@ public class ResourcesExceptionHandlerTest {
 		Set<ConstraintViolation<Model>> violations = validator.validate(new Model());
 
 		Exception ex = new ConstraintViolationException(violations);
-		
+
+		ResponseEntity<Object> responseEntity = testException(ex);
+		assertEquals(HttpStatus.NOT_ACCEPTABLE, responseEntity.getStatusCode());
+	}
+	
+	@Test
+	public void shouldGetTheMessageConstraintViolationException() throws Exception {
+		// expected response, because the exception is not in DefaultHandlerExceptionResolver
+		this.servletResponse.sendError(HttpServletResponse.SC_NOT_ACCEPTABLE);
+
+		Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
+
+		Model model = new Model();
+		model.setNome("Romeu");
+		Set<ConstraintViolation<Model>> violations = validator.validate(model);
+
+		Exception ex = new ConstraintViolationException(violations);
+
 		ResponseEntity<Object> responseEntity = testException(ex);
 		assertEquals(HttpStatus.NOT_ACCEPTABLE, responseEntity.getStatusCode());
 	}
