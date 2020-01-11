@@ -126,7 +126,7 @@ public abstract class ResourcesExceptionHandler extends ResponseEntityExceptionH
 				.title("Empty Result Data Access Exception").status(status.value())
 				.timestamp(new Date().getTime()).userMessage(userMessage).developerMessage(ex.toString()).build());
 
-		return handleExceptionInternal(ex, erros, new HttpHeaders(), status, request);
+		return handleExceptionInternal(ex, erros, headers, status, request);
 	}
 
 	public ResponseEntity<Object> handleDataIntegrityViolationException(DataIntegrityViolationException ex, HttpHeaders headers,
