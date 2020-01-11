@@ -1,7 +1,6 @@
 package com.dms.useful.exception.handler;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
@@ -54,6 +53,7 @@ public abstract class ResourcesExceptionHandler extends ResponseEntityExceptionH
 
 	@Autowired
 	private MessageSource messageSource;
+	private List<ErrorDetails> erros;
 
 	@ExceptionHandler({ 
 		ConstraintViolationException.class,
@@ -62,6 +62,7 @@ public abstract class ResourcesExceptionHandler extends ResponseEntityExceptionH
 	})
 	public final ResponseEntity<Object> handlerResourcesException(Exception ex, WebRequest request) throws Exception {
 		HttpHeaders headers = new HttpHeaders();
+		this.erros = new ArrayList<>();
 
 		if (ex instanceof ConstraintViolationException) {
 			return handleConstraintViolationException((ConstraintViolationException) ex, headers, HttpStatus.NOT_ACCEPTABLE, request);
@@ -73,17 +74,11 @@ public abstract class ResourcesExceptionHandler extends ResponseEntityExceptionH
 		return super.handleException(ex, request);
 	}
 
-	/*
-	 * Avoid NoSuchMessageException
-	 */
-	private String getMessageProperties(String code) {
-		String userMessage;
-		try {
-			userMessage = messageSource.getMessage(code, null, LocaleContextHolder.getLocale());
-		} catch (NoSuchMessageException e) {
-			userMessage = "Mensagem interna (NoSuchMessageException)";
-		}
-		return userMessage;
+	private ErrorDetails addErrorDatails(String title, int status,
+			String userMessage, String developerMessage) {
+		return ErrorDetailsBuilder.newBuilder().title(title)
+				.status(status).timestamp(new Date().getTime()).userMessage(userMessage)
+				.developerMessage(developerMessage).build();
 	}
 
 	private List<ErrorDetails> criarListaErros(BindingResult bindingResult, HttpStatus status) {
@@ -102,11 +97,7 @@ public abstract class ResourcesExceptionHandler extends ResponseEntityExceptionH
 	protected ResponseEntity<Object> handleHttpMessageNotReadable(HttpMessageNotReadableException ex,
 			HttpHeaders headers, HttpStatus status, WebRequest request) {
 
-		String messageUser = getMessageProperties("mensagem.invalida");
-		String messageDeveloper = ex.getCause() != null ? ex.getCause().toString() : ex.toString();
-		List<ErrorDetails> erros = Arrays.asList(ErrorDetailsBuilder.newBuilder()
-				.title("Http Message Not Readable Exception").status(status.value()).timestamp(new Date().getTime())
-				.userMessage(messageUser).developerMessage(messageDeveloper).build());
+		this.erros.add(addErrorDatails("Http Message Not Readable Exception", status.value(), ex.getMessage(), ExceptionUtils.getRootCauseMessage(ex)));
 
 		return handleExceptionInternal(ex, erros, headers, status, request);
 	}
@@ -121,10 +112,7 @@ public abstract class ResourcesExceptionHandler extends ResponseEntityExceptionH
 	public ResponseEntity<Object> handleEmptyResultDataAccessException(EmptyResultDataAccessException ex, HttpHeaders headers,
 			HttpStatus status, WebRequest request) {
 
-		String userMessage = ex.getMessage();
-		List<ErrorDetails> erros = Arrays.asList(ErrorDetailsBuilder.newBuilder()
-				.title("Empty Result Data Access Exception").status(status.value())
-				.timestamp(new Date().getTime()).userMessage(userMessage).developerMessage(ex.toString()).build());
+		this.erros.add(addErrorDatails("Empty Result Data Access Exception", status.value(), ex.getMessage(), ExceptionUtils.getRootCauseMessage(ex)));
 
 		return handleExceptionInternal(ex, erros, headers, status, request);
 	}
@@ -132,13 +120,9 @@ public abstract class ResourcesExceptionHandler extends ResponseEntityExceptionH
 	public ResponseEntity<Object> handleDataIntegrityViolationException(DataIntegrityViolationException ex, HttpHeaders headers,
 			HttpStatus status, WebRequest request) {
 
-		String userMessage = ex.getMessage();
-		List<ErrorDetails> erros = Arrays
-				.asList(ErrorDetailsBuilder.newBuilder().title("Data Integrity Violation Exception")
-						.status(status.value()).timestamp(new Date().getTime())
-						.userMessage(userMessage).developerMessage(ExceptionUtils.getRootCauseMessage(ex)).build());
+		this.erros.add(addErrorDatails("Data Integrity Violation Exception", status.value(), ex.getMessage(), ExceptionUtils.getRootCauseMessage(ex)));
 
-		return handleExceptionInternal(ex, erros, headers, status, request);
+		return handleExceptionInternal(ex, this.erros, headers, status, request);
 	}
 
 	public ResponseEntity<Object> handleConstraintViolationException(ConstraintViolationException ex, HttpHeaders headers,
@@ -147,28 +131,25 @@ public abstract class ResourcesExceptionHandler extends ResponseEntityExceptionH
 		String userMessage = ex.getConstraintViolations().stream()
 									.map(cv -> cv == null ? "null" : cv.getPropertyPath() + ": " + cv.getMessage())
 									.collect(Collectors.joining( ", " ));
-		
-		List<ErrorDetails> erros = Arrays.asList(ErrorDetailsBuilder.newBuilder().title("Constraint Violation Exception")
-				.status(status.value()).timestamp(new Date().getTime()).userMessage(userMessage)
-				.developerMessage(ExceptionUtils.getRootCauseMessage(ex)).build());
 
-		return handleExceptionInternal(ex, erros, headers, status, request);
+		this.erros.add(addErrorDatails("Constraint Violation Exception", status.value(), userMessage, ExceptionUtils.getRootCauseMessage(ex)));
+
+		return handleExceptionInternal(ex, this.erros, headers, status, request);
 	}
 
 	@Override
 	protected ResponseEntity<Object> handleHttpMediaTypeNotAcceptable(HttpMediaTypeNotAcceptableException ex,
 			HttpHeaders headers, HttpStatus status, WebRequest request) {
 
-		StringBuilder builder = new StringBuilder();
-		builder.append("Media type is not supported. ");
-		ex.getSupportedMediaTypes().forEach(t -> builder.append(t + ", "));
-		String messageUser = builder.substring(0, builder.length() - 1);
-		String messageDeveloper = ex.getCause() != null ? ex.getCause().toString() : ex.toString();
-		List<ErrorDetails> erros = Arrays.asList(ErrorDetailsBuilder.newBuilder().title("Not acceptable Media Type")
-				.status(status.value()).timestamp(new Date().getTime()).userMessage(messageUser)
-				.developerMessage(messageDeveloper).build());
+		String userMessage = String.format("%s. Supports: %s", 
+												ex.getMessage().isEmpty() ? "Not acceptable Media Type" : ex.getMessage(),
+												ex.getSupportedMediaTypes().stream()
+															.map(mt -> mt.toString())
+															.collect(Collectors.joining(", ")));
 
-		return handleExceptionInternal(ex, erros, headers, status, request);
+		this.erros.add(addErrorDatails("Not acceptable Media Type", status.value(), userMessage, ExceptionUtils.getRootCauseMessage(ex)));
+
+		return handleExceptionInternal(ex, this.erros, headers, status, request);
 	}
 
 	@Override
@@ -180,15 +161,13 @@ public abstract class ResourcesExceptionHandler extends ResponseEntityExceptionH
 			headers.setAccept(mediaTypes);
 		}
 
-		StringBuilder builder = new StringBuilder();
-		builder.append(ex.getContentType());
-		builder.append(" media type is not supported. Tipos de mídia suportados são: ");
-		ex.getSupportedMediaTypes().forEach(t -> builder.append(t + ", "));
-		String messageUser = builder.substring(0, builder.length() - 1);
-		String messageDeveloper = ex.getCause() != null ? ex.getCause().toString() : ex.toString();
-		List<ErrorDetails> erros = Arrays.asList(ErrorDetailsBuilder.newBuilder().title("Unsupported Media Type")
-				.status(status.value()).timestamp(new Date().getTime()).userMessage(messageUser)
-				.developerMessage(messageDeveloper).build());
+		String userMessage = String.format("%s. Supports: ", 
+										ex.getMessage(),
+										ex.getSupportedMediaTypes().stream()
+													.map(mt -> mt.toString())
+													.collect(Collectors.joining(", ")));
+
+		this.erros.add(addErrorDatails("Unsupported Media Type", status.value(), userMessage, ExceptionUtils.getRootCauseMessage(ex)));
 
 		return handleExceptionInternal(ex, erros, headers, status, request);
 	}
@@ -202,17 +181,14 @@ public abstract class ResourcesExceptionHandler extends ResponseEntityExceptionH
 			headers.setAllow(supportedMethods);
 		}
 
-		StringBuilder builder = new StringBuilder();
-		builder.append("Método ");
-		builder.append(ex.getMethod());
-		builder.append(" não aceito. Método(s) aceito(s): ");
-		ex.getSupportedHttpMethods().forEach(m -> builder.append(m + ", "));
+		String userMessage = String.format("%s. Supports: %s", 
+													ex.getMessage(), 
+													headers.getAllow().stream()
+															.map(hm -> hm.name())
+															.collect(Collectors.joining(", ")));
 
-		String userMessage = builder.toString();
-		List<ErrorDetails> erros = Arrays.asList(ErrorDetailsBuilder.newBuilder().title("Request Method Not Supported")
-				.status(status.value()).timestamp(new Date().getTime()).userMessage(userMessage)
-				.developerMessage(ExceptionUtils.getRootCauseMessage(ex)).build());
+		this.erros.add(addErrorDatails("Request Method Not Supported", status.value(), userMessage, ExceptionUtils.getRootCauseMessage(ex)));
 
-		return handleExceptionInternal(ex, erros, headers, status, request);
+		return handleExceptionInternal(ex, this.erros, headers, status, request);
 	}
 }

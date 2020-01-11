@@ -84,7 +84,8 @@ public class ResourcesExceptionHandlerTest {
 
 	@Test
 	public void whenHttpMediaTypeNotAcceptableException() throws Exception {
-		Exception ex = new HttpMediaTypeNotAcceptableException("");
+		List<MediaType> acceptable = Arrays.asList(MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML);
+		Exception ex = new HttpMediaTypeNotAcceptableException(acceptable);
 		ResponseEntity<Object> responseEntity = testException(ex);
 		assertEquals(HttpStatus.NOT_ACCEPTABLE, responseEntity.getStatusCode());
 	}
