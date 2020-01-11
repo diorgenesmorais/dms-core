@@ -145,7 +145,7 @@ public abstract class ResourcesExceptionHandler extends ResponseEntityExceptionH
 									.map(cv -> cv == null ? "null" : cv.getPropertyPath() + ": " + cv.getMessage())
 									.collect(Collectors.joining( ", " ));
 		
-		List<ErrorDetails> erros = Arrays.asList(ErrorDetailsBuilder.newBuilder().title("Violação de restrição")
+		List<ErrorDetails> erros = Arrays.asList(ErrorDetailsBuilder.newBuilder().title("Constraint Violation Exception")
 				.status(status.value()).timestamp(new Date().getTime()).userMessage(userMessage)
 				.developerMessage(ExceptionUtils.getRootCauseMessage(ex)).build());
 
