@@ -17,6 +17,7 @@ import javax.validation.Validator;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -149,5 +150,16 @@ public class ResourcesExceptionHandlerTest {
 
 		ResponseEntity<Object> responseEntity = testException(ex);
 		assertEquals(HttpStatus.NOT_ACCEPTABLE, responseEntity.getStatusCode());
+	}
+
+	@Test
+	public void whenEmptyResultDataAccessException() throws Exception {
+		// expected response, because the exception is not in DefaultHandlerExceptionResolver
+		this.servletResponse.sendError(HttpServletResponse.SC_NOT_FOUND);
+		
+		Exception ex = new EmptyResultDataAccessException(1);
+
+		ResponseEntity<Object> responseEntity = testException(ex);
+		assertEquals(HttpStatus.NOT_FOUND, responseEntity.getStatusCode());
 	}
 }

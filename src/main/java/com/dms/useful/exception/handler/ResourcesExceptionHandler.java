@@ -57,7 +57,8 @@ public abstract class ResourcesExceptionHandler extends ResponseEntityExceptionH
 
 	@ExceptionHandler({ 
 		ConstraintViolationException.class,
-		DataIntegrityViolationException.class
+		DataIntegrityViolationException.class,
+		EmptyResultDataAccessException.class
 	})
 	public final ResponseEntity<Object> handlerResourcesException(Exception ex, WebRequest request) throws Exception {
 		HttpHeaders headers = new HttpHeaders();
@@ -66,6 +67,8 @@ public abstract class ResourcesExceptionHandler extends ResponseEntityExceptionH
 			return handleConstraintViolationException((ConstraintViolationException) ex, headers, HttpStatus.NOT_ACCEPTABLE, request);
 		} else if (ex instanceof DataIntegrityViolationException) {
 			return handleDataIntegrityViolationException((DataIntegrityViolationException) ex, headers, HttpStatus.NOT_ACCEPTABLE, request);
+		} else if (ex instanceof EmptyResultDataAccessException) {
+			return handleEmptyResultDataAccessException((EmptyResultDataAccessException) ex, headers, HttpStatus.NOT_FOUND, request);
 		}
 		return super.handleException(ex, request);
 	}
@@ -115,15 +118,15 @@ public abstract class ResourcesExceptionHandler extends ResponseEntityExceptionH
 		return handleExceptionInternal(ex, erros, headers, status, request);
 	}
 
-	@ExceptionHandler({ EmptyResultDataAccessException.class })
-	public ResponseEntity<Object> handleEmptyResultDataAccessException(EmptyResultDataAccessException ex,
-			WebRequest request) {
-		String userMessage = getMessageProperties("resource.not-found");
+	public ResponseEntity<Object> handleEmptyResultDataAccessException(EmptyResultDataAccessException ex, HttpHeaders headers,
+			HttpStatus status, WebRequest request) {
+
+		String userMessage = ex.getMessage();
 		List<ErrorDetails> erros = Arrays.asList(ErrorDetailsBuilder.newBuilder()
-				.title("Empty Result Data Access Exception").status(HttpStatus.NOT_FOUND.value())
+				.title("Empty Result Data Access Exception").status(status.value())
 				.timestamp(new Date().getTime()).userMessage(userMessage).developerMessage(ex.toString()).build());
 
-		return handleExceptionInternal(ex, erros, new HttpHeaders(), HttpStatus.NOT_FOUND, request);
+		return handleExceptionInternal(ex, erros, new HttpHeaders(), status, request);
 	}
 
 	public ResponseEntity<Object> handleDataIntegrityViolationException(DataIntegrityViolationException ex, HttpHeaders headers,
