@@ -55,12 +55,17 @@ public abstract class ResourcesExceptionHandler extends ResponseEntityExceptionH
 	@Autowired
 	private MessageSource messageSource;
 
-	@ExceptionHandler({ ConstraintViolationException.class })
+	@ExceptionHandler({ 
+		ConstraintViolationException.class,
+		DataIntegrityViolationException.class
+	})
 	public final ResponseEntity<Object> handlerResourcesException(Exception ex, WebRequest request) throws Exception {
 		HttpHeaders headers = new HttpHeaders();
 
 		if (ex instanceof ConstraintViolationException) {
 			return handleConstraintViolationException((ConstraintViolationException) ex, headers, HttpStatus.NOT_ACCEPTABLE, request);
+		} else if (ex instanceof DataIntegrityViolationException) {
+			return handleDataIntegrityViolationException((DataIntegrityViolationException) ex, headers, HttpStatus.NOT_ACCEPTABLE, request);
 		}
 		return super.handleException(ex, request);
 	}
@@ -121,16 +126,16 @@ public abstract class ResourcesExceptionHandler extends ResponseEntityExceptionH
 		return handleExceptionInternal(ex, erros, new HttpHeaders(), HttpStatus.NOT_FOUND, request);
 	}
 
-	@ExceptionHandler({ DataIntegrityViolationException.class })
-	public ResponseEntity<Object> handleDataIntegrityViolationException(DataIntegrityViolationException ex,
-			WebRequest request) {
-		String userMessage = getMessageProperties("resource.not-acceptable");
+	public ResponseEntity<Object> handleDataIntegrityViolationException(DataIntegrityViolationException ex, HttpHeaders headers,
+			HttpStatus status, WebRequest request) {
+
+		String userMessage = ex.getMessage();
 		List<ErrorDetails> erros = Arrays
 				.asList(ErrorDetailsBuilder.newBuilder().title("Data Integrity Violation Exception")
-						.status(HttpStatus.NOT_ACCEPTABLE.value()).timestamp(new Date().getTime())
+						.status(status.value()).timestamp(new Date().getTime())
 						.userMessage(userMessage).developerMessage(ExceptionUtils.getRootCauseMessage(ex)).build());
 
-		return handleExceptionInternal(ex, erros, new HttpHeaders(), HttpStatus.NOT_ACCEPTABLE, request);
+		return handleExceptionInternal(ex, erros, headers, status, request);
 	}
 
 	public ResponseEntity<Object> handleConstraintViolationException(ConstraintViolationException ex, HttpHeaders headers,

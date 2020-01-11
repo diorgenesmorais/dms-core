@@ -16,6 +16,7 @@ import javax.validation.Validator;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -134,6 +135,17 @@ public class ResourcesExceptionHandlerTest {
 		Set<ConstraintViolation<Model>> violations = validator.validate(model);
 
 		Exception ex = new ConstraintViolationException(violations);
+
+		ResponseEntity<Object> responseEntity = testException(ex);
+		assertEquals(HttpStatus.NOT_ACCEPTABLE, responseEntity.getStatusCode());
+	}
+	
+	@Test
+	public void whenDataIntegrityViolationException() throws Exception {
+		// expected response, because the exception is not in DefaultHandlerExceptionResolver
+		this.servletResponse.sendError(HttpServletResponse.SC_NOT_ACCEPTABLE);
+
+		Exception ex = new DataIntegrityViolationException("Não pode excluir");
 
 		ResponseEntity<Object> responseEntity = testException(ex);
 		assertEquals(HttpStatus.NOT_ACCEPTABLE, responseEntity.getStatusCode());
