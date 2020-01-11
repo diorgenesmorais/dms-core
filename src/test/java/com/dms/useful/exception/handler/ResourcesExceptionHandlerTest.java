@@ -1,6 +1,7 @@
 package com.dms.useful.exception.handler;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertSame;
 
 import java.util.Arrays;
 import java.util.EnumSet;
@@ -22,6 +23,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.web.HttpMediaTypeNotAcceptableException;
@@ -162,5 +164,14 @@ public class ResourcesExceptionHandlerTest {
 
 		ResponseEntity<Object> responseEntity = testException(ex);
 		assertEquals(HttpStatus.NOT_FOUND, responseEntity.getStatusCode());
+	}
+
+	@Test
+	public void whenHttpMessageNotReadableException() throws Exception {
+		@SuppressWarnings("deprecation")
+		Exception ex = new HttpMessageNotReadableException("message");
+
+		ResponseEntity<Object> responseEntity = testException(ex);
+		assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
 	}
 }
