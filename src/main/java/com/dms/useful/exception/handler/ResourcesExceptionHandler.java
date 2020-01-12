@@ -9,9 +9,9 @@ import java.util.stream.Collectors;
 import javax.validation.ConstraintViolationException;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.context.support.ReloadableResourceBundleMessageSource;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpHeaders;
@@ -50,9 +50,13 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
  */
 public abstract class ResourcesExceptionHandler extends ResponseEntityExceptionHandler {
 
-	@Autowired
 	private MessageSource messageSource;
 	private List<ErrorDetails> erros;
+
+	public ResourcesExceptionHandler() {
+		this.messageSource = new ReloadableResourceBundleMessageSource();
+		this.erros = new ArrayList<>();
+	}
 
 	@ExceptionHandler({ 
 		ConstraintViolationException.class,
@@ -61,7 +65,6 @@ public abstract class ResourcesExceptionHandler extends ResponseEntityExceptionH
 	})
 	public final ResponseEntity<Object> handlerResourcesException(Exception ex, WebRequest request) throws Exception {
 		HttpHeaders headers = new HttpHeaders();
-		this.erros = new ArrayList<>();
 
 		if (ex instanceof ConstraintViolationException) {
 			return handleConstraintViolationException((ConstraintViolationException) ex, headers, HttpStatus.NOT_ACCEPTABLE, request);
@@ -81,15 +84,12 @@ public abstract class ResourcesExceptionHandler extends ResponseEntityExceptionH
 	}
 
 	private List<ErrorDetails> criarListaErros(BindingResult bindingResult, HttpStatus status) {
-		List<ErrorDetails> erros = new ArrayList<>();
 
 		for (FieldError fieldError : bindingResult.getFieldErrors()) {
-			String messageUser = messageSource.getMessage(fieldError, LocaleContextHolder.getLocale());
-			erros.add(ErrorDetailsBuilder.newBuilder().title("Not Valid").status(status.value())
-					.timestamp(new Date().getTime()).userMessage(messageUser).developerMessage(fieldError.toString())
-					.build());
+			String userMessage = messageSource.getMessage(fieldError, LocaleContextHolder.getLocale());
+			this.erros.add(addErrorDatails("Not Valid", status.value(), userMessage, fieldError.toString()));
 		}
-		return erros;
+		return this.erros;
 	}
 
 	@Override
@@ -101,11 +101,17 @@ public abstract class ResourcesExceptionHandler extends ResponseEntityExceptionH
 		return handleExceptionInternal(ex, erros, headers, status, request);
 	}
 
+	/**
+	 * Exception to be thrown when validation on an argument annotated with {@code @Valid} fails.
+	 * 
+	 * {@inheritDoc}
+	 */
 	@Override
 	protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex,
 			HttpHeaders headers, HttpStatus status, WebRequest request) {
-		List<ErrorDetails> erros = criarListaErros(ex.getBindingResult(), status);
-		return handleExceptionInternal(ex, erros, headers, status, request);
+
+		List<ErrorDetails> errorsList = criarListaErros(ex.getBindingResult(), status);
+		return handleExceptionInternal(ex, errorsList, headers, status, request);
 	}
 
 	public ResponseEntity<Object> handleEmptyResultDataAccessException(EmptyResultDataAccessException ex, HttpHeaders headers,

@@ -3,6 +3,7 @@ package com.dms.useful.exception.handler;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 
+import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
@@ -17,6 +18,7 @@ import javax.validation.Validator;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.springframework.core.MethodParameter;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpMethod;
@@ -26,9 +28,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.validation.BeanPropertyBindingResult;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import org.springframework.web.HttpMediaTypeNotAcceptableException;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.support.DefaultHandlerExceptionResolver;
@@ -170,6 +176,22 @@ public class ResourcesExceptionHandlerTest {
 	public void whenHttpMessageNotReadableException() throws Exception {
 		@SuppressWarnings("deprecation")
 		Exception ex = new HttpMessageNotReadableException("message");
+
+		ResponseEntity<Object> responseEntity = testException(ex);
+		assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+	}
+
+	@Test
+	public void whenMethodArgumentNotValidException() throws Exception {
+		Model model = new Model();
+		BindingResult bindingResult = new BeanPropertyBindingResult(model, "model");
+		bindingResult.addError(new FieldError("model", "nome", "Não pode ser nulo"));
+		bindingResult.addError(new FieldError("model", "sobrenome", "não pode ser nulo"));
+
+		Method method = Model.class.getDeclaredMethod("setNome", String.class);
+		MethodParameter parameter = new MethodParameter(method, 0);
+
+		Exception ex = new MethodArgumentNotValidException(parameter, bindingResult);
 
 		ResponseEntity<Object> responseEntity = testException(ex);
 		assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
