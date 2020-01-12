@@ -46,7 +46,7 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
  * </pre>
  * 
  * @author Diorgenes Morais
- * @since 1.0.1
+ * @since 1.0.9
  */
 public abstract class ResourcesExceptionHandler extends ResponseEntityExceptionHandler {
 
