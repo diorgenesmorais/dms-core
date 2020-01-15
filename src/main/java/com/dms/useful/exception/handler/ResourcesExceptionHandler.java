@@ -89,6 +89,7 @@ public abstract class ResourcesExceptionHandler extends ResponseEntityExceptionH
 	}
 
 	private List<ErrorDetails> criarListaErros(BindingResult bindingResult, HttpStatus status) {
+		this.erros.clear();
 
 		for (FieldError fieldError : bindingResult.getFieldErrors()) {
 			String userMessage = messageSource.getMessage(fieldError, LocaleContextHolder.getLocale());
@@ -100,6 +101,7 @@ public abstract class ResourcesExceptionHandler extends ResponseEntityExceptionH
 	@Override
 	protected ResponseEntity<Object> handleHttpMessageNotReadable(HttpMessageNotReadableException ex,
 			HttpHeaders headers, HttpStatus status, WebRequest request) {
+		this.erros.clear();
 
 		this.erros.add(addErrorDatails("Http Message Not Readable Exception", status.value(), ex.getMessage(),
 				ExceptionUtils.getRootCauseMessage(ex)));
@@ -123,6 +125,7 @@ public abstract class ResourcesExceptionHandler extends ResponseEntityExceptionH
 
 	public ResponseEntity<Object> handleEmptyResultDataAccessException(EmptyResultDataAccessException ex,
 			HttpHeaders headers, HttpStatus status, WebRequest request) {
+		this.erros.clear();
 
 		this.erros.add(addErrorDatails("Empty Result Data Access Exception", status.value(), ex.getMessage(),
 				ExceptionUtils.getRootCauseMessage(ex)));
@@ -132,6 +135,7 @@ public abstract class ResourcesExceptionHandler extends ResponseEntityExceptionH
 
 	public ResponseEntity<Object> handleDataIntegrityViolationException(DataIntegrityViolationException ex,
 			HttpHeaders headers, HttpStatus status, WebRequest request) {
+		this.erros.clear();
 
 		this.erros.add(addErrorDatails("Data Integrity Violation Exception", status.value(), ex.getMessage(),
 				ExceptionUtils.getRootCauseMessage(ex)));
@@ -141,6 +145,7 @@ public abstract class ResourcesExceptionHandler extends ResponseEntityExceptionH
 
 	public ResponseEntity<Object> handleConstraintViolationException(ConstraintViolationException ex,
 			HttpHeaders headers, HttpStatus status, WebRequest request) {
+		this.erros.clear();
 
 		String userMessage = ex.getConstraintViolations().stream()
 				.map(cv -> cv == null ? "null" : cv.getPropertyPath() + ": " + cv.getMessage())
@@ -155,6 +160,7 @@ public abstract class ResourcesExceptionHandler extends ResponseEntityExceptionH
 	@Override
 	protected ResponseEntity<Object> handleHttpMediaTypeNotAcceptable(HttpMediaTypeNotAcceptableException ex,
 			HttpHeaders headers, HttpStatus status, WebRequest request) {
+		this.erros.clear();
 
 		String userMessage = String.format("%s. Supports: %s",
 				ex.getMessage().isEmpty() ? "Not acceptable Media Type" : ex.getMessage(),
@@ -169,6 +175,7 @@ public abstract class ResourcesExceptionHandler extends ResponseEntityExceptionH
 	@Override
 	protected ResponseEntity<Object> handleHttpMediaTypeNotSupported(HttpMediaTypeNotSupportedException ex,
 			HttpHeaders headers, HttpStatus status, WebRequest request) {
+		this.erros.clear();
 
 		List<MediaType> mediaTypes = ex.getSupportedMediaTypes();
 		if (!CollectionUtils.isEmpty(mediaTypes)) {
@@ -187,6 +194,7 @@ public abstract class ResourcesExceptionHandler extends ResponseEntityExceptionH
 	@Override
 	protected ResponseEntity<Object> handleHttpRequestMethodNotSupported(HttpRequestMethodNotSupportedException ex,
 			HttpHeaders headers, HttpStatus status, WebRequest request) {
+		this.erros.clear();
 
 		Set<HttpMethod> supportedMethods = ex.getSupportedHttpMethods();
 		if (!CollectionUtils.isEmpty(supportedMethods)) {
