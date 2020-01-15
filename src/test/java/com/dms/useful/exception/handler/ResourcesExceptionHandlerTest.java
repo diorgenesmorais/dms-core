@@ -18,6 +18,7 @@ import javax.validation.Validator;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.springframework.context.support.ReloadableResourceBundleMessageSource;
 import org.springframework.core.MethodParameter;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -67,7 +68,7 @@ public class ResourcesExceptionHandlerTest {
 		this.servletResponse = new MockHttpServletResponse();
 		this.request = new ServletWebRequest(this.servletRequest, this.servletResponse);
 
-		this.exceptionHandlerSupport = new ApplicationExceptionHandler();
+		this.exceptionHandlerSupport = new ApplicationExceptionHandler(new ReloadableResourceBundleMessageSource());
 
 		this.defaultExceptionResolver = new DefaultHandlerExceptionResolver();
 	}
