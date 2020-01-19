@@ -1,6 +1,6 @@
 package com.dms.useful.event;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -26,7 +26,7 @@ public class ResourceCreatedEventTest {
 	@Test
 	public void shouldGetTheResponse() throws Exception {
 		this.servletResponse.addHeader("location", "localhost");
-		this.resource = new ResourceCreatedEvent<Integer>(this, this.servletResponse, 1);
+		this.resource = new ResourceCreatedEventImpl(this, this.servletResponse, 1);
 
 		assertTrue(resource.getResponse().containsHeader("location"));
 	}
@@ -34,12 +34,12 @@ public class ResourceCreatedEventTest {
 	@Test
 	public void shouldThrowsAnException() throws Exception {
 		exception.expect(IllegalArgumentException.class);
-		this.resource = new ResourceCreatedEvent<Integer>(this, this.servletResponse, null);
+		this.resource = new ResourceCreatedEventImpl(this, this.servletResponse, null);
 	}
 
 	@Test
 	public void shouldGetMessageOfException() throws Exception {
 		exception.expectMessage("Id should not be null, error in com.dms.useful.event.ResourceCreatedEvent");
-		this.resource = new ResourceCreatedEvent<Integer>(this, this.servletResponse, null);
+		this.resource = new ResourceCreatedEventImpl(this, this.servletResponse, null);
 	}
 }

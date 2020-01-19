@@ -10,20 +10,13 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import com.dms.useful.event.ResourceCreatedEvent;
 
 /**
- * Esta classe adiciona um Location no Headers na resposta da requisição,
- * informando como acessar o novo recurso criado.
+ * This class adds a Location attribute to Headers in the request response,
+ * telling how to access the newly created resource.
  * 
- * <pre>
- * Extender está num pacote <project package>.event.listener
- * colocando a anotação {@code &#064;Component}
- * </pre>
- * 
- * This class has some dependencies that were inserted on the pom.xml
- * 
- * @see https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-web
+ * This class must be part of the application context as a component
  * 
  * @author Diorgenes Morais
- * @since 1.0.1
+ * @since 1.1.2
  * 
  */
 public abstract class ResourceCreatedListener<ID> implements ApplicationListener<ResourceCreatedEvent<ID>> {

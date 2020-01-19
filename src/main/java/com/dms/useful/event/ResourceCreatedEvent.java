@@ -6,7 +6,16 @@ import org.springframework.context.ApplicationEvent;
 import org.springframework.lang.NonNull;
 import org.springframework.util.Assert;
 
-public class ResourceCreatedEvent<ID> extends ApplicationEvent {
+/**
+ * Class to be extended to compose the response through an event that will be
+ * launched.
+ * 
+ * @author Diorgenes Morais
+ *
+ * @param <ID> type must be defined. Example of type: {@code Integer}
+ * @since 1.1.2
+ */
+public abstract class ResourceCreatedEvent<ID> extends ApplicationEvent {
 
 	private static final long serialVersionUID = 7067219761465481821L;
 
@@ -16,11 +25,9 @@ public class ResourceCreatedEvent<ID> extends ApplicationEvent {
 	/**
 	 * Constructor override
 	 * 
-	 * @param source
-	 *            where you generated the event
+	 * @param source   where you generated the event
 	 * @param response
-	 * @param id
-	 *            of model (resource)
+	 * @param id       of model (resource)
 	 */
 	public ResourceCreatedEvent(Object source, HttpServletResponse response, @NonNull ID id) {
 		super(source);
