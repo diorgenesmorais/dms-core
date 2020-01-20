@@ -137,8 +137,8 @@ public abstract class ResourcesExceptionHandler extends ResponseEntityExceptionH
 			HttpHeaders headers, HttpStatus status, WebRequest request) {
 		this.erros.clear();
 
-		this.erros.add(addErrorDatails("Data Integrity Violation Exception", status.value(), ex.getMessage(),
-				ExceptionUtils.getRootCauseMessage(ex)));
+		this.erros.add(addErrorDatails("Data Integrity Violation Exception", status.value(), 
+										ExceptionUtils.getRootCauseMessage(ex), ex.getMessage()));
 
 		return handleExceptionInternal(ex, this.erros, headers, status, request);
 	}

@@ -1,9 +1,9 @@
 package com.dms.useful.exception.handler;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertSame;
+import static org.junit.Assert.*;
 
 import java.lang.reflect.Method;
+import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
@@ -157,6 +157,20 @@ public class ResourcesExceptionHandlerTest {
 		this.servletResponse.sendError(HttpServletResponse.SC_NOT_ACCEPTABLE);
 
 		Exception ex = new DataIntegrityViolationException("Não pode excluir");
+
+		ResponseEntity<Object> responseEntity = testException(ex);
+		assertEquals(HttpStatus.NOT_ACCEPTABLE, responseEntity.getStatusCode());
+	}
+
+	@Test
+	public void whenDuplicateEntry() throws Exception {
+		// expected response, because the exception is not in DefaultHandlerExceptionResolver
+		this.servletResponse.sendError(HttpServletResponse.SC_NOT_ACCEPTABLE);
+
+		Exception ex = new DataIntegrityViolationException("could not execute statement; "
+				+ "SQL [n/a]; constraint [nome]; nested exception is "
+				+ "org.hibernate.exception.ConstraintViolationException: could not execute statement", 
+				new SQLIntegrityConstraintViolationException("Duplicate entry 'MASTER' for key 'nome'"));
 
 		ResponseEntity<Object> responseEntity = testException(ex);
 		assertEquals(HttpStatus.NOT_ACCEPTABLE, responseEntity.getStatusCode());
