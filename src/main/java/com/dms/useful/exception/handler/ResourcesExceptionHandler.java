@@ -3,6 +3,7 @@ package com.dms.useful.exception.handler;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -47,7 +48,7 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
  * 
  * @author Diorgenes Morais
  *
- * @since 1.1.0
+ * @since 1.1.6
  */
 public abstract class ResourcesExceptionHandler extends ResponseEntityExceptionHandler {
 
@@ -65,8 +66,12 @@ public abstract class ResourcesExceptionHandler extends ResponseEntityExceptionH
 		this.erros = new ArrayList<>();
 	}
 
-	@ExceptionHandler({ ConstraintViolationException.class, DataIntegrityViolationException.class,
-			EmptyResultDataAccessException.class })
+	@ExceptionHandler({ 
+		ConstraintViolationException.class, 
+		DataIntegrityViolationException.class,
+		EmptyResultDataAccessException.class,
+		NoSuchElementException.class
+	})
 	public final ResponseEntity<Object> handlerResourcesException(Exception ex, WebRequest request) throws Exception {
 		HttpHeaders headers = new HttpHeaders();
 
@@ -79,6 +84,8 @@ public abstract class ResourcesExceptionHandler extends ResponseEntityExceptionH
 		} else if (ex instanceof EmptyResultDataAccessException) {
 			return handleEmptyResultDataAccessException((EmptyResultDataAccessException) ex, headers,
 					HttpStatus.NOT_FOUND, request);
+		} else if (ex instanceof NoSuchElementException) {
+			return handleNoSuchElementException((NoSuchElementException) ex, headers, HttpStatus.NOT_FOUND, request);
 		}
 		return super.handleException(ex, request);
 	}
@@ -129,6 +136,15 @@ public abstract class ResourcesExceptionHandler extends ResponseEntityExceptionH
 
 		this.erros.add(addErrorDatails("Empty Result Data Access Exception", status.value(), ex.getMessage(),
 				ExceptionUtils.getRootCauseMessage(ex)));
+
+		return handleExceptionInternal(ex, erros, headers, status, request);
+	}
+
+	public ResponseEntity<Object> handleNoSuchElementException(NoSuchElementException ex, HttpHeaders headers,
+			HttpStatus status, WebRequest request) {
+		this.erros.clear();
+		
+		this.erros.add(addErrorDatails("No Such Element Exception", status.value(), ex.getMessage(), ExceptionUtils.getRootCauseMessage(ex)));
 
 		return handleExceptionInternal(ex, erros, headers, status, request);
 	}
