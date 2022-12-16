@@ -21,7 +21,7 @@
 		<!-- Servlet API -->
 		<servlet.version>4.0.1</servlet.version>
 		<!-- Spring WebMvc -->
-		<webmvc.version>5.2.3.RELEASE</webmvc.version>
+		<webmvc.version>5.2.20.RELEASE</webmvc.version>
 		<!-- Javax Validation -->
 		<validation.version>2.0.1.Final</validation.version>
 		<commons-lang3.version>3.9</commons-lang3.version>
