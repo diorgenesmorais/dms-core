@@ -3,7 +3,7 @@
 
 	<groupId>com.dms.useful</groupId>
 	<artifactId>dms-core</artifactId>
-	<version>1.1.7-RELEASE</version>
+	<version>2.0.0</version>
 	<name>dms-core</name>
 	<description>Biblioteca de códigos útil</description>
 
@@ -18,7 +18,7 @@
 		<spring-data-jpa.version>2.6.7</spring-data-jpa.version>
 		<!-- Servlet API -->
 		<servlet.version>4.0.1</servlet.version>
-		<!-- Spring WebMvc -->
+		<!-- Spring WebMvc 5.3.24 to 6.0.7-->
 		<webmvc.version>5.3.24</webmvc.version>
 		<!-- Javax Validation -->
 		<validation.version>2.0.1.Final</validation.version>
@@ -96,7 +96,7 @@
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
-			<version>4.12</version>
+			<version>4.13.1</version>
 		</dependency>
 		<!-- https://mvnrepository.com/artifact/org.springframework/spring-test -->
 		<dependency>
@@ -137,6 +137,13 @@
 			<groupId>org.glassfish</groupId>
 			<artifactId>javax.el</artifactId>
 			<version>3.0.1-b12</version>
+		</dependency>
+
+		<!-- https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-annotations -->
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-annotations</artifactId>
+			<version>2.15.0</version>
 		</dependency>
 
 	</dependencies>

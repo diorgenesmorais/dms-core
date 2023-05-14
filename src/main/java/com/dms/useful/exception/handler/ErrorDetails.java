@@ -1,46 +1,49 @@
 package com.dms.useful.exception.handler;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+
 /**
  * {@code ErrorDetails} class
  * 
  * @author Diorgenes Morais
- * @version 1.0.0
- * @since 1.0.1
+ * @version 2.0.0
+ * @since 2.0.0
  */
+@JsonInclude(Include.NON_NULL)
 public class ErrorDetails {
 
-	private String title;
 	private int status;
-	private long timestamp;
-	private String userMessage;
-	private String developerMessage;
+	private String type;
+	private String title;
+	private String detail;
+	private String instance;
 
-	public ErrorDetails(String title, int status, long timestamp, String userMessage, String developerMessage) {
-		this.title = title;
+	public ErrorDetails(int status, String type, String title, String detail, String instance) {
 		this.status = status;
-		this.timestamp = timestamp;
-		this.userMessage = userMessage;
-		this.developerMessage = developerMessage;
-	}
-
-	public String getTitle() {
-		return title;
+		this.type = type;
+		this.title = title;
+		this.detail = detail;
+		this.instance = instance;
 	}
 
 	public int getStatus() {
-		return status;
+		return this.status;
+	}
+	
+	public String getType() {
+		return this.type;
 	}
 
-	public long getTimestamp() {
-		return timestamp;
+	public String getTitle() {
+		return this.title;
 	}
 
-	public String getUserMessage() {
-		return userMessage;
+	public String getDetail() {
+		return this.detail;
 	}
 
-	public String getDeveloperMessage() {
-		return developerMessage;
+	public String getInstance() {
+		return this.instance;
 	}
-
 }

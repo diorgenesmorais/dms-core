@@ -5,28 +5,31 @@ package com.dms.useful.exception.handler;
  * class
  * 
  * @author Diorgenes Morais
- * @version 1.0.0
- * @since 1.0.1
+ * @version 2.0.0
+ * @since 2.0.0
  */
 public class ErrorDetailsBuilder {
 
-	private String title;
 	private int status;
-	private long timestamp;
-	private String userMessage;
-	private String developerMessage;
+	private String type;
+	private String title;
+	private String detail;
+	private String instance;
 
-	private ErrorDetailsBuilder() {
-
-	}
+	private ErrorDetailsBuilder() {}
 
 	/**
 	 * Builder of this class
 	 * 
 	 * @return an {@code ErrorDetailsBuilder}
 	 */
-	public static ErrorDetailsBuilder newBuilder() {
+	public static ErrorDetailsBuilder builder() {
 		return new ErrorDetailsBuilder();
+	}
+
+	public ErrorDetailsBuilder type(String type) {
+		this.type = type;
+		return this;
 	}
 
 	public ErrorDetailsBuilder title(String title) {
@@ -39,18 +42,13 @@ public class ErrorDetailsBuilder {
 		return this;
 	}
 
-	public ErrorDetailsBuilder timestamp(long timestamp) {
-		this.timestamp = timestamp;
+	public ErrorDetailsBuilder detail(String detail) {
+		this.detail = detail;
 		return this;
 	}
 
-	public ErrorDetailsBuilder userMessage(String userMessage) {
-		this.userMessage = userMessage;
-		return this;
-	}
-
-	public ErrorDetailsBuilder developerMessage(String developerMessage) {
-		this.developerMessage = developerMessage;
+	public ErrorDetailsBuilder instance(String instance) {
+		this.instance = instance;
 		return this;
 	}
 
@@ -60,6 +58,6 @@ public class ErrorDetailsBuilder {
 	 * @return instance of {@code ErrorDetails}
 	 */
 	public ErrorDetails build() {
-		return new ErrorDetails(this.title, this.status, this.timestamp, this.userMessage, this.developerMessage);
+		return new ErrorDetails(this.status, this.type, this.title, this.detail, this.instance);
 	}
 }
