@@ -1,7 +1,6 @@
 package com.dms.useful.exception.handler;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertSame;
+import static org.junit.Assert.*;
 
 import java.lang.reflect.Method;
 import java.sql.SQLIntegrityConstraintViolationException;
@@ -39,7 +38,9 @@ import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.servlet.NoHandlerFoundException;
 import org.springframework.web.servlet.mvc.support.DefaultHandlerExceptionResolver;
+import org.springframework.http.HttpHeaders;
 
 import com.google.gson.Gson;
 
@@ -222,5 +223,26 @@ public class ResourcesExceptionHandlerTest {
 
 		ResponseEntity<Object> responseEntity = testException(ex);
 		assertEquals(HttpStatus.NOT_FOUND, responseEntity.getStatusCode());
+	}
+	
+	@Test
+	public void whenNoHandlerFoundException() throws Exception {
+		// expected response, because the exception is not in DefaultHandlerExceptionResolver
+		this.servletResponse.sendError(HttpServletResponse.SC_NOT_FOUND);
+		HttpHeaders hearders = new HttpHeaders();
+
+		Exception ex = new NoHandlerFoundException("GET", "/hostcheck", hearders);
+
+		ResponseEntity<Object> responseEntity = testException(ex);
+		assertEquals(HttpStatus.NOT_FOUND, responseEntity.getStatusCode());
+	}
+	
+	@Test
+	public void whenUnhandledException() throws Exception {
+		// expected response, because the exception is not in DefaultHandlerExceptionResolver
+		this.servletResponse.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+
+		ResponseEntity<Object> responseEntity = testException(new Exception("Erro interno no servidor"));
+		assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntity.getStatusCode());
 	}
 }

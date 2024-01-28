@@ -9,13 +9,12 @@ import java.util.stream.Collectors;
 import javax.validation.ConstraintViolationException;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.MessageSource;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.lang.Nullable;
@@ -23,11 +22,16 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.HttpMediaTypeNotAcceptableException;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.servlet.NoHandlerFoundException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
+
+import com.dms.useful.exception.EntityNotFoundException;
 
 /**
  * Classe abstrata que manipula as excessões da API.
@@ -104,61 +108,65 @@ public abstract class ResourcesExceptionHandler extends ResponseEntityExceptionH
 	}
 
 	@ExceptionHandler(EmptyResultDataAccessException.class)
-	public ResponseEntity<Object> handleEmptyResultDataAccessException(EmptyResultDataAccessException ex,
-			HttpHeaders headers, HttpStatus status, WebRequest request) {
+	public ResponseEntity<Object> handleEmptyResultDataAccessException(EmptyResultDataAccessException ex, WebRequest request) {
+		
+		var status = HttpStatus.NOT_FOUND;
 
 		ErrorDetails error = createErrorDetailBuilder(status, ProblemType.EMPTY_RESULT_DATA_ACCESS,
 				ExceptionUtils.getRootCauseMessage(ex)).build();
 
-		return handleExceptionInternal(ex, error, headers, status, request);
+		return handleExceptionInternal(ex, error, new HttpHeaders(), status, request);
 	}
 
 	@ExceptionHandler(NoSuchElementException.class)
-	public ResponseEntity<Object> handleNoSuchElementException(NoSuchElementException ex, HttpHeaders headers,
-			HttpStatus status, WebRequest request) {
+	public ResponseEntity<Object> handleNoSuchElementException(NoSuchElementException ex, WebRequest request) {
+		
+		var status = HttpStatus.NOT_FOUND;
 
 		ErrorDetails error = createErrorDetailBuilder(status, ProblemType.NO_SUCH_ELEMENT,
-				ExceptionUtils.getRootCauseMessage(ex)).build();
+				ex.getMessage()).build();
 
-		return handleExceptionInternal(ex, error, headers, status, request);
+		return handleExceptionInternal(ex, error, new HttpHeaders(), status, request);
 	}
 
 	public final ResponseEntity<Object> handlerResourcesException(Exception ex, WebRequest request) throws Exception {
-		HttpHeaders headers = new HttpHeaders();
 
-		if (ex instanceof ConstraintViolationException) {
-			return handleConstraintViolationException((ConstraintViolationException) ex, headers,
-					HttpStatus.NOT_ACCEPTABLE, request);
-		} else if (ex instanceof DataIntegrityViolationException) {
-			return handleDataIntegrityViolationException((DataIntegrityViolationException) ex, headers,
-					HttpStatus.NOT_ACCEPTABLE, request);
-		} else if (ex instanceof EmptyResultDataAccessException) {
-			return handleEmptyResultDataAccessException((EmptyResultDataAccessException) ex, headers,
-					HttpStatus.NOT_FOUND, request);
-		} else if (ex instanceof NoSuchElementException) {
-			return handleNoSuchElementException((NoSuchElementException) ex, headers, HttpStatus.NOT_FOUND, request);
+		try {
+			if (ex instanceof ConstraintViolationException) {
+				return handleConstraintViolationException((ConstraintViolationException) ex, request);
+			} else if (ex instanceof DataIntegrityViolationException) {
+				return handleDataIntegrityViolationException((DataIntegrityViolationException) ex, request);
+			} else if (ex instanceof EmptyResultDataAccessException) {
+				return handleEmptyResultDataAccessException((EmptyResultDataAccessException) ex, request);
+			} else if (ex instanceof NoSuchElementException) {
+				return handleNoSuchElementException((NoSuchElementException) ex, request);
+			}
+			return super.handleException(ex, request);			
+		} catch (Exception e) {
+			return handleUncaught((Exception) ex, request);
 		}
-		return super.handleException(ex, request);
 	}
 
 	@ExceptionHandler(DataIntegrityViolationException.class)
-	public ResponseEntity<Object> handleDataIntegrityViolationException(DataIntegrityViolationException ex,
-			HttpHeaders headers, HttpStatus status, WebRequest request) {
+	public ResponseEntity<Object> handleDataIntegrityViolationException(DataIntegrityViolationException ex, WebRequest request) {
+		
+		var status = HttpStatus.NOT_ACCEPTABLE;
 
 		ErrorDetails error = createErrorDetailBuilder(status, ProblemType.DATA_INTEGRITY_VIOLATION,
 				ExceptionUtils.getRootCauseMessage(ex)).build();
 
-		return handleExceptionInternal(ex, error, headers, status, request);
+		return handleExceptionInternal(ex, error, new HttpHeaders(), status, request);
 	}
 
 	@ExceptionHandler(ConstraintViolationException.class)
-	public ResponseEntity<Object> handleConstraintViolationException(ConstraintViolationException ex,
-			HttpHeaders headers, HttpStatus status, WebRequest request) {
+	public ResponseEntity<Object> handleConstraintViolationException(ConstraintViolationException ex, WebRequest request) {
+		
+		var status = HttpStatus.NOT_ACCEPTABLE;
 
 		ErrorDetails error = createErrorDetailBuilder(status, ProblemType.CONSTRAINT_VIOLATION,
 				ExceptionUtils.getRootCauseMessage(ex)).build();
 
-		return handleExceptionInternal(ex, error, headers, status, request);
+		return handleExceptionInternal(ex, error, new HttpHeaders(), status, request);
 	}
 
 	@Override
@@ -194,17 +202,69 @@ public abstract class ResourcesExceptionHandler extends ResponseEntityExceptionH
 	}
 
 	/**
-	 * Crie um {@code ErrorDetailBuilder} básico (com as propriedades comuns) O proposito é
-	 * permitir após retornar o ErrorDetailsBuilder adicionar se necessário mais
-	 * alguma propriedade antes de chamar o build.
+	 * Crie um {@code ErrorDetailBuilder} básico (com as propriedades comuns) O
+	 * proposito é permitir após retornar o ErrorDetailsBuilder adicionar se
+	 * necessário mais alguma propriedade antes de chamar o build.
 	 * 
 	 * @param status      um objeto {@code HttpStatus}
 	 * @param problemType Enum que contém a URI e title
 	 * @param detail      detalhamento do problema (error)
 	 * @return {@code ErrorDetailsBuilder}
 	 */
-	private ErrorDetailsBuilder createErrorDetailBuilder(HttpStatus status, ProblemType problemType, String detail) {
+	public ErrorDetailsBuilder createErrorDetailBuilder(HttpStatus status, ProblemType problemType, String detail) {
 		return ErrorDetailsBuilder.builder().status(status.value()).type(problemType.getUri())
 				.title(problemType.getTitle()).detail(detail);
+	}
+
+	@Override
+	protected ResponseEntity<Object> handleNoHandlerFoundException(NoHandlerFoundException ex, HttpHeaders headers,
+			HttpStatus status, WebRequest request) {
+
+		String message = String.format("Resource %s not found", ex.getRequestURL());
+		ErrorDetails error = createErrorDetailBuilder(status, ProblemType.NOT_FOUND, message).build();
+
+		return handleExceptionInternal(ex, error, headers, status, request);
+	}
+
+	@ExceptionHandler(Exception.class)
+	public ResponseEntity<Object> handleUncaught(Exception ex, WebRequest request) {
+		HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
+
+		ex.printStackTrace();
+		String message = "Ocorreu um erro interno inesperado no sistema";
+		ErrorDetails error = createErrorDetailBuilder(status, ProblemType.INTERNAL_SERVER_ERROR, message).build();
+
+		return handleExceptionInternal(ex, error, new HttpHeaders(), status, request);
+	}
+
+	@ExceptionHandler(EntityNotFoundException.class)
+	public ResponseEntity<Object> handleEntityNotFoundException(EntityNotFoundException ex, WebRequest request) {
+
+		var status = HttpStatus.BAD_REQUEST;
+		ErrorDetails error = createErrorDetailBuilder(status, ProblemType.NO_SUCH_ELEMENT,
+				ex.getMessage()).build();
+
+		return handleExceptionInternal(ex, error, new HttpHeaders(), status, request);
+	}
+	
+	@Override
+	protected ResponseEntity<Object> handleHttpMediaTypeNotSupported(HttpMediaTypeNotSupportedException ex,
+			HttpHeaders headers, HttpStatus status, WebRequest request) {
+		
+		List<MediaType> mediaTypes = ex.getSupportedMediaTypes();
+		if (!CollectionUtils.isEmpty(mediaTypes)) {
+			headers.setAccept(mediaTypes);
+			if (request instanceof ServletWebRequest) {
+				ServletWebRequest servletWebRequest = (ServletWebRequest) request;
+				if (HttpMethod.PATCH.equals(servletWebRequest.getHttpMethod())) {
+					headers.setAcceptPatch(mediaTypes);
+				}
+			}
+		}
+
+		ErrorDetails error = createErrorDetailBuilder(status, ProblemType.NOT_ACCEPTABLE_MEDIA_TYPE,
+				ex.getMessage()).build();
+	
+		return handleExceptionInternal(ex, error, headers, status, request);
 	}
 }

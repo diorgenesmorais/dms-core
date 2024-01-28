@@ -9,7 +9,9 @@ public enum ProblemType {
 	NO_SUCH_ELEMENT("/no-such-element", "No Such Element"),
 	METHOD_ARGUMENT_NOT_VALID("/method-argument-not-valid", "Method Argument Not Valid"),
 	HTTP_REQUEST_METHOD_NOT_SUPPORTED("/http-request-method-not-supported", "Http Request Method Not Supported"),
-	HTTP_MEDIA_TYPE_NOT_ACCEPTABLE("/http-media-type-not-acceptable", "Http Media Type Not Acceptable");
+	HTTP_MEDIA_TYPE_NOT_ACCEPTABLE("/http-media-type-not-acceptable", "Http Media Type Not Acceptable"),
+	NOT_FOUND("/not-found", "Not Found"),
+	INTERNAL_SERVER_ERROR("/internal-server-error", "Internal Server Error");
 
 	private String uri;
 	private String title;

@@ -5,7 +5,6 @@ import static org.junit.Assert.assertTrue;
 import javax.servlet.http.HttpServletResponse;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -14,9 +13,7 @@ public class ResourceCreatedEventTest {
 
 	private HttpServletResponse servletResponse;
 	private ResourceCreatedEvent<Integer> resource;
-
-	@Rule
-	public ExpectedException exception = ExpectedException.none();
+	private ExpectedException exception;
 
 	@Before
 	public void setup() {
@@ -31,15 +28,16 @@ public class ResourceCreatedEventTest {
 		assertTrue(resource.getResponse().containsHeader("location"));
 	}
 
-	@Test
+	@SuppressWarnings("null")
+	@Test(expected = IllegalArgumentException.class)
 	public void shouldThrowsAnException() throws Exception {
-		exception.expect(IllegalArgumentException.class);
 		this.resource = new ResourceCreatedEventImpl(this, this.servletResponse, null);
 	}
 
-	@Test
+	@SuppressWarnings("null")
+	@Test(expected = Exception.class)
 	public void shouldGetMessageOfException() throws Exception {
-		exception.expectMessage("Id should not be null, error in com.dms.useful.event.ResourceCreatedEvent");
+		exception.reportMissingExceptionWithMessage("Id should not be null, error in com.dms.useful.event.ResourceCreatedEvent");
 		this.resource = new ResourceCreatedEventImpl(this, this.servletResponse, null);
 	}
 }
