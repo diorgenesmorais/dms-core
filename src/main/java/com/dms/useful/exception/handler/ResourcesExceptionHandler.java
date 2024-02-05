@@ -1,5 +1,6 @@
 package com.dms.useful.exception.handler;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -73,9 +74,17 @@ public abstract class ResourcesExceptionHandler extends ResponseEntityExceptionH
 	protected ResponseEntity<Object> handleExceptionInternal(Exception ex, @Nullable Object body, HttpHeaders headers,
 			HttpStatus status, WebRequest request) {
 		if (body == null) {
-			body = ErrorDetailsBuilder.builder().status(status.value()).title(status.getReasonPhrase()).build();
+			body = ErrorDetailsBuilder.builder()
+					.status(status.value())
+					.title(status.getReasonPhrase())
+					.timestamp(LocalDateTime.now())
+					.build();
 		} else if (body instanceof String) {
-			body = ErrorDetailsBuilder.builder().status(status.value()).title((String) body).build();
+			body = ErrorDetailsBuilder.builder()
+					.status(status.value())
+					.title((String) body)
+					.timestamp(LocalDateTime.now())
+					.build();
 		}
 
 		return super.handleExceptionInternal(ex, body, headers, status, request);
@@ -212,8 +221,12 @@ public abstract class ResourcesExceptionHandler extends ResponseEntityExceptionH
 	 * @return {@code ErrorDetailsBuilder}
 	 */
 	public ErrorDetailsBuilder createErrorDetailBuilder(HttpStatus status, ProblemType problemType, String detail) {
-		return ErrorDetailsBuilder.builder().status(status.value()).type(problemType.getUri())
-				.title(problemType.getTitle()).detail(detail);
+		return ErrorDetailsBuilder.builder()
+				.status(status.value())
+				.type(problemType.getUri())
+				.title(problemType.getTitle())
+				.detail(detail)
+				.timestamp(LocalDateTime.now());
 	}
 
 	@Override

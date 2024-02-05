@@ -1,9 +1,11 @@
 package com.dms.useful.exception.handler;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertSame;
 
 import java.lang.reflect.Method;
 import java.sql.SQLIntegrityConstraintViolationException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
@@ -22,6 +24,7 @@ import org.junit.Test;
 import org.springframework.core.MethodParameter;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -40,9 +43,11 @@ import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.NoHandlerFoundException;
 import org.springframework.web.servlet.mvc.support.DefaultHandlerExceptionResolver;
-import org.springframework.http.HttpHeaders;
 
-import com.google.gson.Gson;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 
 /**
  * Referente aos testes unitários da classe {@code ResourcesExceptionHandler}
@@ -61,8 +66,11 @@ public class ResourcesExceptionHandlerTest {
 	private HttpServletRequest servletRequest;
 
 	private MockHttpServletResponse servletResponse;
-
-	private Gson gson = new Gson();
+	
+	private ObjectMapper objectMapper = new ObjectMapper()
+				.registerModule(new ParameterNamesModule())
+				.registerModule(new Jdk8Module())
+				.registerModule(new JavaTimeModule());
 
 	@Before
 	public void setup() {
@@ -88,7 +96,8 @@ public class ResourcesExceptionHandlerTest {
 
 		assertEquals(this.servletResponse.getStatus(), responseEntity.getStatusCodeValue());
 
-		System.out.println("Body: " + gson.toJson(responseEntity.getBody()));
+		String json = objectMapper.writeValueAsString(responseEntity.getBody());
+		System.out.println("Body: " + json);
 
 		return responseEntity;
 	}
@@ -244,5 +253,15 @@ public class ResourcesExceptionHandlerTest {
 
 		ResponseEntity<Object> responseEntity = testException(new Exception("Erro interno no servidor"));
 		assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntity.getStatusCode());
+	}
+
+	@Test
+	public void whenHttpMediaTypeNotSupportedNotInformed() throws Exception {
+		List<MediaType> acceptable = new ArrayList<>();
+		Exception ex = new HttpMediaTypeNotSupportedException(MediaType.APPLICATION_XML, acceptable);
+
+		ResponseEntity<Object> responseEntity = testException(ex);
+		assertEquals(acceptable, responseEntity.getHeaders().getAccept());
+		assertEquals(HttpStatus.UNSUPPORTED_MEDIA_TYPE, responseEntity.getStatusCode());
 	}
 }

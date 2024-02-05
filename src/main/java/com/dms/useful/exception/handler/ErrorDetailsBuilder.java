@@ -1,5 +1,7 @@
 package com.dms.useful.exception.handler;
 
+import java.time.LocalDateTime;
+
 /**
  * This {@code ErrorDetailsBuilder} class is a builder of {@code ErrorDetails}
  * class
@@ -15,6 +17,7 @@ public class ErrorDetailsBuilder {
 	private String title;
 	private String detail;
 	private String instance;
+	private LocalDateTime timestamp;
 
 	private ErrorDetailsBuilder() {}
 
@@ -52,12 +55,17 @@ public class ErrorDetailsBuilder {
 		return this;
 	}
 
+	public ErrorDetailsBuilder timestamp(LocalDateTime timestamp) {
+		this.timestamp = timestamp;
+		return this;
+	}
+
 	/**
 	 * Builder of {@code ErrorDetails}
 	 * 
 	 * @return instance of {@code ErrorDetails}
 	 */
 	public ErrorDetails build() {
-		return new ErrorDetails(this.status, this.type, this.title, this.detail, this.instance);
+		return new ErrorDetails(this.status, this.type, this.title, this.detail, this.instance, this.timestamp);
 	}
 }

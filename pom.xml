@@ -1,9 +1,11 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>com.dms.useful</groupId>
 	<artifactId>dms-core</artifactId>
-	<version>2.0.1</version>
+	<version>2.0.2</version>
 	<name>dms-core</name>
 	<description>Biblioteca de códigos útil</description>
 
@@ -19,7 +21,7 @@
 		<!-- Servlet API -->
 		<servlet.version>4.0.1</servlet.version>
 		<!-- Spring WebMvc 5.3.24 to 6.0.7-->
-		<webmvc.version>5.3.28</webmvc.version>
+		<webmvc.version>5.3.31</webmvc.version>
 		<!-- Javax Validation -->
 		<validation.version>2.0.1.Final</validation.version>
 		<commons-lang3.version>3.12.0</commons-lang3.version>
@@ -105,12 +107,6 @@
 			<version>5.3.15</version>
 			<scope>test</scope>
 		</dependency>
-		<!-- https://mvnrepository.com/artifact/com.google.code.gson/gson -->
-		<dependency>
-			<groupId>com.google.code.gson</groupId>
-			<artifactId>gson</artifactId>
-			<version>2.10</version>
-		</dependency>
 
 		<!-- https://mvnrepository.com/artifact/org.slf4j/slf4j-api -->
 		<dependency>
@@ -146,6 +142,29 @@
 			<version>2.15.0</version>
 		</dependency>
 
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
+			<version>2.13.0</version>
+		</dependency>
+
+		<dependency>
+		    <groupId>com.fasterxml.jackson.module</groupId>
+		    <artifactId>jackson-module-parameter-names</artifactId>
+		    <version>2.13.0</version>
+		</dependency>
+
+		<dependency>
+    		<groupId>com.fasterxml.jackson.datatype</groupId>
+    		<artifactId>jackson-datatype-jsr310</artifactId>
+    		<version>2.13.4</version>
+		</dependency>
+
+		<dependency>
+		    <groupId>com.fasterxml.jackson.datatype</groupId>
+		    <artifactId>jackson-datatype-jdk8</artifactId>
+		    <version>2.13.0</version>
+		</dependency>
 	</dependencies>
 
 	<profiles>
