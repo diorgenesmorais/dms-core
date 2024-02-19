@@ -1,12 +1,15 @@
 package com.dms.useful.exception.handler;
 
-import java.time.LocalDateTime;
-import java.util.ArrayList;
+import java.net.URI;
+import java.time.OffsetDateTime;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.ConstraintViolationException;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -51,51 +54,55 @@ import com.dms.useful.exception.EntityNotFoundException;
  * @author Diorgenes Morais
  *
  * @since 1.1.6
- * @version 2.0.0
+ * @version 2.0.3
  */
 public abstract class ResourcesExceptionHandler extends ResponseEntityExceptionHandler {
 
-	private List<String> erros;
+	private Map<String, Object> properties;
 
 	public ResourcesExceptionHandler() {
-		this.erros = new ArrayList<>();
+		this.properties = new LinkedHashMap<>();
 	}
 
-	private List<String> criarListaErros(BindingResult bindingResult) {
-		this.erros.clear();
+	private Map<String, Object> criarListaErros(BindingResult bindingResult) {
+		this.properties.clear();
 
 		for (FieldError fieldError : bindingResult.getFieldErrors()) {
-			this.erros.add(fieldError.getField() + ": " + fieldError.getDefaultMessage());
+			this.properties.put(fieldError.getField(), fieldError.getDefaultMessage());
 		}
-		return this.erros;
+		return this.properties;
+	}
+
+	private URI getURI(WebRequest request) {
+		HttpServletRequest req = ((ServletWebRequest) request).getRequest();
+		return URI.create(req.getRequestURI());
 	}
 
 	@Override
 	protected ResponseEntity<Object> handleExceptionInternal(Exception ex, @Nullable Object body, HttpHeaders headers,
 			HttpStatus status, WebRequest request) {
 		if (body == null) {
-			body = ErrorDetailsBuilder.builder()
-					.status(status.value())
+			body = ProblemDetail.builder("https://api.dms.com.br/errors", status)
 					.title(status.getReasonPhrase())
-					.timestamp(LocalDateTime.now())
-					.build();
+					.instance(getURI(request))
+					.timestamp(OffsetDateTime.now());
 		} else if (body instanceof String) {
-			body = ErrorDetailsBuilder.builder()
-					.status(status.value())
+			body = ProblemDetail.builder("https://api.dms.com.br/errors", status)
+					.title(status.getReasonPhrase())
 					.title((String) body)
-					.timestamp(LocalDateTime.now())
-					.build();
+					.instance(getURI(request))
+					.timestamp(OffsetDateTime.now());
 		}
 
-		return super.handleExceptionInternal(ex, body, headers, status, request);
+		return new ResponseEntity<>(body, headers, status);
 	};
 
 	@Override
 	protected ResponseEntity<Object> handleHttpMessageNotReadable(HttpMessageNotReadableException ex,
 			HttpHeaders headers, HttpStatus status, WebRequest request) {
 
-		ErrorDetails error = createErrorDetailBuilder(status, ProblemType.HTTP_MESSAGE_NOT_READABLE,
-				ExceptionUtils.getRootCauseMessage(ex)).build();
+		ProblemDetail error = createProblemDetail(status, ProblemType.HTTP_MESSAGE_NOT_READABLE,
+				ExceptionUtils.getRootCauseMessage(ex), request);
 
 		return handleExceptionInternal(ex, error, headers, status, request);
 	}
@@ -110,9 +117,9 @@ public abstract class ResourcesExceptionHandler extends ResponseEntityExceptionH
 	protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex,
 			HttpHeaders headers, HttpStatus status, WebRequest request) {
 
-		List<String> errorsList = criarListaErros(ex.getBindingResult());
-		ErrorDetails error = createErrorDetailBuilder(status, ProblemType.METHOD_ARGUMENT_NOT_VALID,
-				errorsList.toString()).build();
+		Map<String, Object> errorsList = criarListaErros(ex.getBindingResult());
+		ProblemDetail error = createProblemDetail(status, ProblemType.METHOD_ARGUMENT_NOT_VALID, "Por favor, verificar as propriedades do objeto properties", request)
+				.properties(errorsList);
 		return handleExceptionInternal(ex, error, headers, status, request);
 	}
 
@@ -121,8 +128,8 @@ public abstract class ResourcesExceptionHandler extends ResponseEntityExceptionH
 		
 		var status = HttpStatus.NOT_FOUND;
 
-		ErrorDetails error = createErrorDetailBuilder(status, ProblemType.EMPTY_RESULT_DATA_ACCESS,
-				ExceptionUtils.getRootCauseMessage(ex)).build();
+		ProblemDetail error = createProblemDetail(status, ProblemType.EMPTY_RESULT_DATA_ACCESS,
+				ExceptionUtils.getRootCauseMessage(ex), request);
 
 		return handleExceptionInternal(ex, error, new HttpHeaders(), status, request);
 	}
@@ -132,8 +139,8 @@ public abstract class ResourcesExceptionHandler extends ResponseEntityExceptionH
 		
 		var status = HttpStatus.NOT_FOUND;
 
-		ErrorDetails error = createErrorDetailBuilder(status, ProblemType.NO_SUCH_ELEMENT,
-				ex.getMessage()).build();
+		ProblemDetail error = createProblemDetail(status, ProblemType.NO_SUCH_ELEMENT,
+				ex.getMessage(), request);
 
 		return handleExceptionInternal(ex, error, new HttpHeaders(), status, request);
 	}
@@ -161,8 +168,8 @@ public abstract class ResourcesExceptionHandler extends ResponseEntityExceptionH
 		
 		var status = HttpStatus.NOT_ACCEPTABLE;
 
-		ErrorDetails error = createErrorDetailBuilder(status, ProblemType.DATA_INTEGRITY_VIOLATION,
-				ExceptionUtils.getRootCauseMessage(ex)).build();
+		ProblemDetail error = createProblemDetail(status, ProblemType.DATA_INTEGRITY_VIOLATION,
+				ExceptionUtils.getRootCauseMessage(ex), request);
 
 		return handleExceptionInternal(ex, error, new HttpHeaders(), status, request);
 	}
@@ -172,8 +179,8 @@ public abstract class ResourcesExceptionHandler extends ResponseEntityExceptionH
 		
 		var status = HttpStatus.NOT_ACCEPTABLE;
 
-		ErrorDetails error = createErrorDetailBuilder(status, ProblemType.CONSTRAINT_VIOLATION,
-				ExceptionUtils.getRootCauseMessage(ex)).build();
+		ProblemDetail error = createProblemDetail(status, ProblemType.CONSTRAINT_VIOLATION,
+				ExceptionUtils.getRootCauseMessage(ex), request);
 
 		return handleExceptionInternal(ex, error, new HttpHeaders(), status, request);
 	}
@@ -186,8 +193,7 @@ public abstract class ResourcesExceptionHandler extends ResponseEntityExceptionH
 				ex.getMessage().isEmpty() ? "Not acceptable Media Type" : ex.getMessage(),
 				ex.getSupportedMediaTypes().stream().map(mt -> mt.toString()).collect(Collectors.joining(", ")));
 
-		ErrorDetails error = createErrorDetailBuilder(status, ProblemType.HTTP_MEDIA_TYPE_NOT_ACCEPTABLE, userMessage)
-				.build();
+		ProblemDetail error = createProblemDetail(status, ProblemType.HTTP_MEDIA_TYPE_NOT_ACCEPTABLE, userMessage, request);
 
 		return handleExceptionInternal(ex, error, headers, status, request);
 	}
@@ -204,29 +210,29 @@ public abstract class ResourcesExceptionHandler extends ResponseEntityExceptionH
 		String userMessage = String.format("%s. Supports: %s", ExceptionUtils.getRootCauseMessage(ex),
 				headers.getAllow().stream().map(hm -> hm.name()).collect(Collectors.joining(", ")));
 
-		ErrorDetails error = createErrorDetailBuilder(status, ProblemType.HTTP_REQUEST_METHOD_NOT_SUPPORTED,
-				userMessage).build();
+		ProblemDetail error = createProblemDetail(status, ProblemType.HTTP_REQUEST_METHOD_NOT_SUPPORTED,
+				userMessage, request);
 
 		return handleExceptionInternal(ex, error, headers, status, request);
 	}
 
 	/**
-	 * Crie um {@code ErrorDetailBuilder} básico (com as propriedades comuns) O
+	 * Crie um {@code ProblemDetail} básico (com as propriedades comuns) O
 	 * proposito é permitir após retornar o ErrorDetailsBuilder adicionar se
 	 * necessário mais alguma propriedade antes de chamar o build.
 	 * 
 	 * @param status      um objeto {@code HttpStatus}
 	 * @param problemType Enum que contém a URI e title
 	 * @param detail      detalhamento do problema (error)
-	 * @return {@code ErrorDetailsBuilder}
+	 * @return {@code ProblemDetail}
 	 */
-	public ErrorDetailsBuilder createErrorDetailBuilder(HttpStatus status, ProblemType problemType, String detail) {
-		return ErrorDetailsBuilder.builder()
-				.status(status.value())
-				.type(problemType.getUri())
+	public ProblemDetail createProblemDetail(HttpStatus status, ProblemType problemType, String detail, WebRequest request) {
+		return ProblemDetail.builder(problemType.getUri(), status)
+				.title(status.getReasonPhrase())
 				.title(problemType.getTitle())
 				.detail(detail)
-				.timestamp(LocalDateTime.now());
+				.instance(getURI(request))
+				.timestamp(OffsetDateTime.now());
 	}
 
 	@Override
@@ -234,7 +240,7 @@ public abstract class ResourcesExceptionHandler extends ResponseEntityExceptionH
 			HttpStatus status, WebRequest request) {
 
 		String message = String.format("Resource %s not found", ex.getRequestURL());
-		ErrorDetails error = createErrorDetailBuilder(status, ProblemType.NOT_FOUND, message).build();
+		ProblemDetail error = createProblemDetail(status, ProblemType.NOT_FOUND, message, request);
 
 		return handleExceptionInternal(ex, error, headers, status, request);
 	}
@@ -243,9 +249,8 @@ public abstract class ResourcesExceptionHandler extends ResponseEntityExceptionH
 	public ResponseEntity<Object> handleUncaught(Exception ex, WebRequest request) {
 		HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
 
-		ex.printStackTrace();
 		String message = "Ocorreu um erro interno inesperado no sistema";
-		ErrorDetails error = createErrorDetailBuilder(status, ProblemType.INTERNAL_SERVER_ERROR, message).build();
+		ProblemDetail error = createProblemDetail(status, ProblemType.INTERNAL_SERVER_ERROR, message, request);
 
 		return handleExceptionInternal(ex, error, new HttpHeaders(), status, request);
 	}
@@ -254,8 +259,8 @@ public abstract class ResourcesExceptionHandler extends ResponseEntityExceptionH
 	public ResponseEntity<Object> handleEntityNotFoundException(EntityNotFoundException ex, WebRequest request) {
 
 		var status = HttpStatus.BAD_REQUEST;
-		ErrorDetails error = createErrorDetailBuilder(status, ProblemType.NO_SUCH_ELEMENT,
-				ex.getMessage()).build();
+		ProblemDetail error = createProblemDetail(status, ProblemType.NO_SUCH_ELEMENT,
+				ex.getMessage(), request);
 
 		return handleExceptionInternal(ex, error, new HttpHeaders(), status, request);
 	}
@@ -275,8 +280,8 @@ public abstract class ResourcesExceptionHandler extends ResponseEntityExceptionH
 			}
 		}
 
-		ErrorDetails error = createErrorDetailBuilder(status, ProblemType.NOT_ACCEPTABLE_MEDIA_TYPE,
-				ex.getMessage()).build();
+		ProblemDetail error = createProblemDetail(status, ProblemType.NOT_ACCEPTABLE_MEDIA_TYPE,
+				ex.getMessage(), request);
 	
 		return handleExceptionInternal(ex, error, headers, status, request);
 	}

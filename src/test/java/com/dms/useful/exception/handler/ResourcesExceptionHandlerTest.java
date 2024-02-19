@@ -1,7 +1,6 @@
 package com.dms.useful.exception.handler;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertSame;
 
 import java.lang.reflect.Method;
 import java.sql.SQLIntegrityConstraintViolationException;
@@ -74,7 +73,7 @@ public class ResourcesExceptionHandlerTest {
 
 	@Before
 	public void setup() {
-		this.servletRequest = new MockHttpServletRequest();
+		this.servletRequest = new MockHttpServletRequest("GET", "/products");
 		this.servletResponse = new MockHttpServletResponse();
 		this.request = new ServletWebRequest(this.servletRequest, this.servletResponse);
 
@@ -86,11 +85,6 @@ public class ResourcesExceptionHandlerTest {
 	private ResponseEntity<Object> testException(Exception ex) throws Exception {
 		ResponseEntity<Object> responseEntity = this.exceptionHandlerSupport.handlerResourcesException(ex,
 				this.request);
-
-		// SPR-9653
-		if (HttpStatus.INTERNAL_SERVER_ERROR.equals(responseEntity.getStatusCode())) {
-			assertSame(ex, this.servletRequest.getAttribute("javax.servlet.error.exception"));
-		}
 
 		this.defaultExceptionResolver.resolveException(this.servletRequest, this.servletResponse, null, ex);
 
